@@ -41,7 +41,7 @@ return function(api)
         local reply_markup = opts.reply_markup
         reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
         local parse_mode = opts.parse_mode
-        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'markdown' or parse_mode
+        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'MarkdownV2' or parse_mode
         local reply_parameters = opts.reply_parameters
         if not reply_parameters then
             reply_parameters = api.reply_parameters(message.message_id, message.chat.id, true)
@@ -442,6 +442,8 @@ return function(api)
     function api.send_poll(chat_id, question, options, opts)
         opts = opts or {}
         options = type(options) == 'table' and json.encode(options) or options
+        local question_entities = opts.question_entities
+        question_entities = type(question_entities) == 'table' and json.encode(question_entities) or question_entities
         local explanation_entities = opts.explanation_entities
         explanation_entities = type(explanation_entities) == 'table' and json.encode(explanation_entities) or explanation_entities
         local reply_parameters = opts.reply_parameters
@@ -452,6 +454,8 @@ return function(api)
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
             ['question'] = question,
+            ['question_parse_mode'] = opts.question_parse_mode,
+            ['question_entities'] = question_entities,
             ['options'] = options,
             ['is_anonymous'] = opts.is_anonymous,
             ['type'] = opts.poll_type,

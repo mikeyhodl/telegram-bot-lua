@@ -31,7 +31,7 @@ describe('methods', function()
             assert.is_true(req.parameters.disable_notification)
         end)
 
-        it('send_message converts boolean parse_mode', function()
+        it('send_message converts boolean parse_mode to MarkdownV2', function()
             api.send_message(123, 'Hello', { parse_mode = true })
             local req = api._last_request()
             assert.equals('MarkdownV2', req.parameters.parse_mode)
@@ -45,8 +45,56 @@ describe('methods', function()
             assert.is_table(decoded.inline_keyboard)
         end)
 
+        it('send_message JSON-encodes link_preview_options', function()
+            api.send_message(123, 'Hello', {
+                link_preview_options = { is_disabled = true }
+            })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.link_preview_options)
+            assert.is_true(decoded.is_disabled)
+        end)
+
+        it('send_message JSON-encodes reply_parameters', function()
+            api.send_message(123, 'Hello', {
+                reply_parameters = api.reply_parameters(42, 123, true)
+            })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.reply_parameters)
+            assert.equals(42, decoded.message_id)
+        end)
+
+        it('send_message JSON-encodes entities', function()
+            local entities = {{ type = 'bold', offset = 0, length = 5 }}
+            api.send_message(123, 'Hello', { entities = entities })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.entities)
+            assert.equals('bold', decoded[1].type)
+        end)
+
+        it('send_message passes business_connection_id', function()
+            api.send_message(123, 'Hello', { business_connection_id = 'biz_123' })
+            local req = api._last_request()
+            assert.equals('biz_123', req.parameters.business_connection_id)
+        end)
+
+        it('send_message passes message_effect_id', function()
+            api.send_message(123, 'Hello', { message_effect_id = 'effect_1' })
+            local req = api._last_request()
+            assert.equals('effect_1', req.parameters.message_effect_id)
+        end)
+
         it('send_reply validates message table', function()
             local result = api.send_reply('not a table', 'text')
+            assert.is_false(result)
+        end)
+
+        it('send_reply rejects table without chat', function()
+            local result = api.send_reply({ message_id = 42 }, 'text')
+            assert.is_false(result)
+        end)
+
+        it('send_reply rejects table without message_id', function()
+            local result = api.send_reply({ chat = { id = 123 } }, 'text')
             assert.is_false(result)
         end)
 
@@ -58,11 +106,41 @@ describe('methods', function()
             assert.equals(42, rp.message_id)
         end)
 
+        it('send_reply uses MarkdownV2 for boolean parse_mode', function()
+            api.send_reply(
+                { chat = { id = 123 }, message_id = 42 },
+                'Hello',
+                { parse_mode = true }
+            )
+            local req = api._last_request()
+            assert.equals('MarkdownV2', req.parameters.parse_mode)
+        end)
+
+        it('send_reply preserves custom reply_parameters', function()
+            local custom_rp = api.reply_parameters(99, 456, false)
+            api.send_reply(
+                { chat = { id = 123 }, message_id = 42 },
+                'Hello',
+                { reply_parameters = custom_rp }
+            )
+            local req = api._last_request()
+            local rp = json.decode(req.parameters.reply_parameters)
+            assert.equals(99, rp.message_id)
+        end)
+
         it('forward_message works', function()
             api.forward_message(123, 456, 789)
             local req = api._last_request()
             assert.truthy(req.endpoint:find('/forwardMessage'))
             assert.equals(789, req.parameters.message_id)
+        end)
+
+        it('forward_messages encodes message_ids', function()
+            api.forward_messages(123, 456, {1, 2, 3})
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/forwardMessages'))
+            local ids = json.decode(req.parameters.message_ids)
+            assert.equals(3, #ids)
         end)
 
         it('copy_message works', function()
@@ -72,6 +150,14 @@ describe('methods', function()
             assert.equals('New caption', req.parameters.caption)
         end)
 
+        it('copy_messages works', function()
+            api.copy_messages(123, 456, {1, 2})
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/copyMessages'))
+        end)
+
+        -- Media methods: file and opts handling
+
         it('send_photo passes file param', function()
             api.send_photo(123, 'photo_file_id')
             local req = api._last_request()
@@ -80,11 +166,149 @@ describe('methods', function()
             assert.equals('photo_file_id', req.file.photo)
         end)
 
-        it('send_document passes file param', function()
-            api.send_document(123, 'doc_id')
+        it('send_photo passes caption and opts', function()
+            api.send_photo(123, 'photo_file_id', {
+                caption = 'My photo',
+                parse_mode = 'HTML',
+                has_spoiler = true,
+                show_caption_above_media = true
+            })
+            local req = api._last_request()
+            assert.equals('My photo', req.parameters.caption)
+            assert.equals('HTML', req.parameters.parse_mode)
+            assert.is_true(req.parameters.has_spoiler)
+            assert.is_true(req.parameters.show_caption_above_media)
+        end)
+
+        it('send_audio passes file and thumbnail', function()
+            api.send_audio(123, 'audio_file_id', { thumbnail = 'thumb_id' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendAudio'))
+            assert.equals('audio_file_id', req.file.audio)
+            assert.equals('thumb_id', req.file.thumbnail)
+        end)
+
+        it('send_audio passes caption and metadata', function()
+            api.send_audio(123, 'audio_file_id', {
+                caption = 'My audio',
+                duration = 120,
+                performer = 'Artist',
+                title = 'Song'
+            })
+            local req = api._last_request()
+            assert.equals('My audio', req.parameters.caption)
+            assert.equals(120, req.parameters.duration)
+            assert.equals('Artist', req.parameters.performer)
+            assert.equals('Song', req.parameters.title)
+        end)
+
+        it('send_document passes file and thumbnail', function()
+            api.send_document(123, 'doc_file_id', { thumbnail = 'thumb_id' })
             local req = api._last_request()
             assert.truthy(req.endpoint:find('/sendDocument'))
+            assert.equals('doc_file_id', req.file.document)
+            assert.equals('thumb_id', req.file.thumbnail)
         end)
+
+        it('send_document passes caption', function()
+            api.send_document(123, 'doc_file_id', { caption = 'My doc' })
+            local req = api._last_request()
+            assert.equals('My doc', req.parameters.caption)
+        end)
+
+        it('send_video passes file and thumbnail', function()
+            api.send_video(123, 'video_file_id', { thumbnail = 'thumb_id' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendVideo'))
+            assert.equals('video_file_id', req.file.video)
+            assert.equals('thumb_id', req.file.thumbnail)
+        end)
+
+        it('send_video passes caption and all opts', function()
+            api.send_video(123, 'video_file_id', {
+                caption = 'My video',
+                parse_mode = 'HTML',
+                duration = 60,
+                width = 1920,
+                height = 1080,
+                has_spoiler = true,
+                supports_streaming = true,
+                show_caption_above_media = true
+            })
+            local req = api._last_request()
+            assert.equals('My video', req.parameters.caption)
+            assert.equals('HTML', req.parameters.parse_mode)
+            assert.equals(60, req.parameters.duration)
+            assert.equals(1920, req.parameters.width)
+            assert.equals(1080, req.parameters.height)
+            assert.is_true(req.parameters.has_spoiler)
+            assert.is_true(req.parameters.supports_streaming)
+            assert.is_true(req.parameters.show_caption_above_media)
+        end)
+
+        it('send_video JSON-encodes caption_entities', function()
+            local entities = {{ type = 'bold', offset = 0, length = 5 }}
+            api.send_video(123, 'video_file_id', { caption_entities = entities })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.caption_entities)
+            assert.equals('bold', decoded[1].type)
+        end)
+
+        it('send_animation passes file and thumbnail', function()
+            api.send_animation(123, 'anim_file_id', { thumbnail = 'thumb_id' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendAnimation'))
+            assert.equals('anim_file_id', req.file.animation)
+            assert.equals('thumb_id', req.file.thumbnail)
+        end)
+
+        it('send_animation passes caption', function()
+            api.send_animation(123, 'anim_file_id', { caption = 'My GIF' })
+            local req = api._last_request()
+            assert.equals('My GIF', req.parameters.caption)
+        end)
+
+        it('send_voice passes file param', function()
+            api.send_voice(123, 'voice_file_id')
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendVoice'))
+            assert.equals('voice_file_id', req.file.voice)
+        end)
+
+        it('send_voice passes caption', function()
+            api.send_voice(123, 'voice_file_id', { caption = 'My voice' })
+            local req = api._last_request()
+            assert.equals('My voice', req.parameters.caption)
+        end)
+
+        it('send_video_note passes file and thumbnail', function()
+            api.send_video_note(123, 'vnote_file_id', { thumbnail = 'thumb_id' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendVideoNote'))
+            assert.equals('vnote_file_id', req.file.video_note)
+            assert.equals('thumb_id', req.file.thumbnail)
+        end)
+
+        it('send_video_note passes duration and length', function()
+            api.send_video_note(123, 'vnote_file_id', { duration = 30, length = 240 })
+            local req = api._last_request()
+            assert.equals(30, req.parameters.duration)
+            assert.equals(240, req.parameters.length)
+        end)
+
+        it('send_media_group encodes media', function()
+            local media = {
+                { type = 'photo', media = 'photo1' },
+                { type = 'photo', media = 'photo2' }
+            }
+            api.send_media_group(123, media)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendMediaGroup'))
+            local decoded = json.decode(req.parameters.media)
+            assert.equals(2, #decoded)
+        end)
+
+        -- Poll tests
 
         it('send_poll encodes options', function()
             api.send_poll(123, 'Question?', {
@@ -95,6 +319,51 @@ describe('methods', function()
             local opts = json.decode(req.parameters.options)
             assert.equals(2, #opts)
         end)
+
+        it('send_poll passes question_parse_mode', function()
+            api.send_poll(123, '*Bold question*', {
+                { text = 'Yes' }, { text = 'No' }
+            }, { question_parse_mode = 'MarkdownV2' })
+            local req = api._last_request()
+            assert.equals('MarkdownV2', req.parameters.question_parse_mode)
+        end)
+
+        it('send_poll JSON-encodes question_entities', function()
+            local entities = {{ type = 'bold', offset = 0, length = 4 }}
+            api.send_poll(123, 'Question?', {
+                { text = 'Yes' }, { text = 'No' }
+            }, { question_entities = entities })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.question_entities)
+            assert.equals('bold', decoded[1].type)
+        end)
+
+        it('send_poll passes quiz options', function()
+            api.send_poll(123, 'Capital of France?', {
+                { text = 'Berlin' }, { text = 'Paris' }, { text = 'London' }
+            }, {
+                poll_type = 'quiz',
+                correct_option_id = 1,
+                explanation = 'Paris is the capital',
+                explanation_parse_mode = 'HTML'
+            })
+            local req = api._last_request()
+            assert.equals('quiz', req.parameters.type)
+            assert.equals(1, req.parameters.correct_option_id)
+            assert.equals('Paris is the capital', req.parameters.explanation)
+        end)
+
+        it('send_poll JSON-encodes explanation_entities', function()
+            local entities = {{ type = 'italic', offset = 0, length = 5 }}
+            api.send_poll(123, 'Q?', {
+                { text = 'A' }, { text = 'B' }
+            }, { explanation_entities = entities })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.explanation_entities)
+            assert.equals('italic', decoded[1].type)
+        end)
+
+        -- Other send methods
 
         it('send_dice works', function()
             api.send_dice(123, { emoji = '🎲' })
@@ -109,6 +378,60 @@ describe('methods', function()
             assert.equals('typing', req.parameters.action)
         end)
 
+        it('send_location passes coordinates', function()
+            api.send_location(123, 51.5074, -0.1278)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendLocation'))
+            assert.equals(51.5074, req.parameters.latitude)
+            assert.equals(-0.1278, req.parameters.longitude)
+        end)
+
+        it('send_location passes live period and opts', function()
+            api.send_location(123, 51.5074, -0.1278, {
+                live_period = 3600,
+                heading = 90,
+                proximity_alert_radius = 100
+            })
+            local req = api._last_request()
+            assert.equals(3600, req.parameters.live_period)
+            assert.equals(90, req.parameters.heading)
+            assert.equals(100, req.parameters.proximity_alert_radius)
+        end)
+
+        it('send_venue passes all fields', function()
+            api.send_venue(123, 51.5074, -0.1278, 'Big Ben', 'Westminster, London', {
+                foursquare_id = 'fsq_123',
+                google_place_id = 'gp_123'
+            })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendVenue'))
+            assert.equals('Big Ben', req.parameters.title)
+            assert.equals('Westminster, London', req.parameters.address)
+            assert.equals('fsq_123', req.parameters.foursquare_id)
+        end)
+
+        it('send_contact passes phone and name', function()
+            api.send_contact(123, '+447911123456', 'John', {
+                last_name = 'Doe',
+                vcard = 'BEGIN:VCARD'
+            })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendContact'))
+            assert.equals('+447911123456', req.parameters.phone_number)
+            assert.equals('John', req.parameters.first_name)
+            assert.equals('Doe', req.parameters.last_name)
+        end)
+
+        it('set_message_reaction works', function()
+            api.set_message_reaction(123, 42, {
+                reaction = {{ type = 'emoji', emoji = '👍' }}
+            })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/setMessageReaction'))
+            local decoded = json.decode(req.parameters.reaction)
+            assert.equals('👍', decoded[1].emoji)
+        end)
+
         it('send_paid_media works', function()
             api.send_paid_media(123, 100, {})
             local req = api._last_request()
@@ -116,12 +439,75 @@ describe('methods', function()
             assert.equals(100, req.parameters.star_count)
         end)
 
+        -- Edit methods
+
         it('edit_message_text works', function()
             api.edit_message_text(123, 42, 'Updated', { parse_mode = 'HTML' })
             local req = api._last_request()
             assert.truthy(req.endpoint:find('/editMessageText'))
             assert.equals('Updated', req.parameters.text)
             assert.equals('HTML', req.parameters.parse_mode)
+        end)
+
+        it('edit_message_text converts boolean parse_mode', function()
+            api.edit_message_text(123, 42, 'Updated', { parse_mode = true })
+            local req = api._last_request()
+            assert.equals('MarkdownV2', req.parameters.parse_mode)
+        end)
+
+        it('edit_message_text passes inline_message_id', function()
+            api.edit_message_text(nil, nil, 'Updated', { inline_message_id = 'inline_123' })
+            local req = api._last_request()
+            assert.equals('inline_123', req.parameters.inline_message_id)
+        end)
+
+        it('edit_message_caption works', function()
+            api.edit_message_caption(123, 42, {
+                caption = 'New caption',
+                parse_mode = true
+            })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/editMessageCaption'))
+            assert.equals('New caption', req.parameters.caption)
+            assert.equals('MarkdownV2', req.parameters.parse_mode)
+        end)
+
+        it('edit_message_media works', function()
+            local media = { type = 'photo', media = 'photo_id' }
+            api.edit_message_media(123, 42, media)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/editMessageMedia'))
+            local decoded = json.decode(req.parameters.media)
+            assert.equals('photo', decoded.type)
+        end)
+
+        it('edit_message_reply_markup works', function()
+            local kb = api.inline_keyboard():row(api.row():callback_data_button('OK', 'ok'))
+            api.edit_message_reply_markup(123, 42, { reply_markup = kb })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/editMessageReplyMarkup'))
+            local decoded = json.decode(req.parameters.reply_markup)
+            assert.is_table(decoded.inline_keyboard)
+        end)
+
+        it('edit_message_live_location works', function()
+            api.edit_message_live_location(123, 42, 52.0, 13.0, { heading = 180 })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/editMessageLiveLocation'))
+            assert.equals(52.0, req.parameters.latitude)
+            assert.equals(180, req.parameters.heading)
+        end)
+
+        it('stop_message_live_location works', function()
+            api.stop_message_live_location(123, 42)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/stopMessageLiveLocation'))
+        end)
+
+        it('stop_poll works', function()
+            api.stop_poll(123, 42)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/stopPoll'))
         end)
 
         it('delete_message works', function()
@@ -177,6 +563,36 @@ describe('methods', function()
             api.promote_chat_member(123, 456, { can_manage_direct_messages = true })
             local req = api._last_request()
             assert.is_true(req.parameters.can_manage_direct_messages)
+        end)
+    end)
+
+    describe('stickers', function()
+        it('send_sticker passes file param', function()
+            api.send_sticker(123, 'sticker_file_id')
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/sendSticker'))
+            assert.equals('sticker_file_id', req.file.sticker)
+        end)
+
+        it('send_sticker passes opts', function()
+            api.send_sticker(123, 'sticker_file_id', { emoji = '😀' })
+            local req = api._last_request()
+            assert.equals('😀', req.parameters.emoji)
+        end)
+
+        it('upload_sticker_file works', function()
+            api.upload_sticker_file(456, 'sticker_data', 'static')
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/uploadStickerFile'))
+            assert.equals(456, req.parameters.user_id)
+            assert.equals('static', req.parameters.sticker_format)
+        end)
+
+        it('set_sticker_set_thumbnail passes file', function()
+            api.set_sticker_set_thumbnail('my_set', 456, { thumbnail = 'thumb_data' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/setStickerSetThumbnail'))
+            assert.equals('thumb_data', req.file.thumbnail)
         end)
     end)
 

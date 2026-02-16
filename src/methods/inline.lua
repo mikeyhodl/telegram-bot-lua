@@ -49,7 +49,7 @@ return function(api)
     function api.send_inline_article(inline_query_id, title, description, message_text, parse_mode, reply_markup)
         description = description or title
         message_text = message_text or description
-        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'markdown' or parse_mode
+        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'MarkdownV2' or parse_mode
         return api.answer_inline_query(inline_query_id, json.encode({{
             ['type'] = 'article',
             ['id'] = '1',

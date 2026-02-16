@@ -345,7 +345,7 @@ return function(api)
     -- Input message content constructors
 
     function api.input_text_message_content(message_text, parse_mode, link_preview_options, encoded)
-        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'markdown' or parse_mode
+        parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'MarkdownV2' or parse_mode
         local input_message_content = {
             ['message_text'] = tostring(message_text),
             ['parse_mode'] = parse_mode,
