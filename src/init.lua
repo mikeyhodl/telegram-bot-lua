@@ -20,7 +20,7 @@ local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.0-0'
+api.version = '3.1-0'
 
 function api.configure(token, debug)
     if not token or type(token) ~= 'string' then
@@ -59,21 +59,22 @@ function api.request(endpoint, parameters, file)
         local output = json.encode(safe, { ['indent'] = true })
         print(output)
     end
-    if file and next(file) ~= nil then
-        local file_type, file_name = next(file)
-        if type(file_name) == 'string' then
-            local file_res = io.open(file_name, 'rb')
-            if file_res then
-                parameters[file_type] = {
-                    filename = file_name,
-                    data = file_res:read('*a')
-                }
-                file_res:close()
+    if file then
+        for file_type, file_name in pairs(file) do
+            if type(file_name) == 'string' then
+                local file_res = io.open(file_name, 'rb')
+                if file_res then
+                    parameters[file_type] = {
+                        filename = file_name,
+                        data = file_res:read('*a')
+                    }
+                    file_res:close()
+                else
+                    parameters[file_type] = file_name
+                end
             else
                 parameters[file_type] = file_name
             end
-        else
-            parameters[file_type] = file_name
         end
     end
     parameters = next(parameters) == nil and {''} or parameters
