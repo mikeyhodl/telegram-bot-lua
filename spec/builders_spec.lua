@@ -213,9 +213,9 @@ describe('builders', function()
             assert.equals('HTML', c.parse_mode)
         end)
 
-        it('converts boolean true to markdown', function()
+        it('converts boolean true to MarkdownV2', function()
             local c = api.input_text_message_content('Hello', true)
-            assert.equals('markdown', c.parse_mode)
+            assert.equals('MarkdownV2', c.parse_mode)
         end)
     end)
 

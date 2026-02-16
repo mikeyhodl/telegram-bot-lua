@@ -57,6 +57,7 @@ api.info.name = api.info.first_name
 -- Store request calls for assertions
 api._requests = {}
 local real_request = api.request
+api._real_request = real_request
 api.request = function(endpoint, parameters, file)
     table.insert(api._requests, {
         endpoint = endpoint,
