@@ -1,8 +1,8 @@
 package = "telegram-bot-lua"
-version = "3.0-0"
+version = "3.2-0"
 source = {
-    url = "https://github.com/wrxck/telegram-bot-lua/archive/refs/tags/v3.0.tar.gz",
-    dir = "telegram-bot-lua-3.0"
+    url = "https://github.com/wrxck/telegram-bot-lua/archive/refs/tags/v3.2.tar.gz",
+    dir = "telegram-bot-lua-3.2"
 }
 description = {
     summary = "A feature-filled Telegram bot API library",
@@ -29,7 +29,7 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ["telegram-bot-lua"] = "src/init.lua",
+        ["telegram-bot-lua"] = "src/main.lua",
         ["telegram-bot-lua.config"] = "src/config.lua",
         ["telegram-bot-lua.handlers"] = "src/handlers.lua",
         ["telegram-bot-lua.builders"] = "src/builders.lua",

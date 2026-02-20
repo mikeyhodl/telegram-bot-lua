@@ -1,9 +1,8 @@
 package = "telegram-bot-lua"
 version = "3.1-0"
 source = {
-    url = "git://github.com/wrxck/telegram-bot-lua.git",
-    dir = "telegram-bot-lua",
-    tag = "v3.1"
+    url = "https://github.com/wrxck/telegram-bot-lua/archive/refs/tags/v3.1.tar.gz",
+    dir = "telegram-bot-lua-3.1"
 }
 description = {
     summary = "A feature-filled Telegram bot API library",

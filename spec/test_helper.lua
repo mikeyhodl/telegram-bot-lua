@@ -6,7 +6,7 @@ package.path = './src/?.lua;./src/?/init.lua;' .. package.path
 
 -- Pre-register our module names to match rockspec mappings
 local module_map = {
-    ['telegram-bot-lua'] = 'src/init.lua',
+    ['telegram-bot-lua'] = 'src/main.lua',
     ['telegram-bot-lua.config'] = 'src/config.lua',
     ['telegram-bot-lua.handlers'] = 'src/handlers.lua',
     ['telegram-bot-lua.builders'] = 'src/builders.lua',
