@@ -95,7 +95,7 @@ api.run({ timeout = 60 })
 
 ```
 src/
-  init.lua              -- Entry point, core HTTP, module loader
+  main.lua              -- Entry point, core HTTP, module loader
   config.lua            -- API endpoint configuration
   polyfill.lua          -- Lua 5.1+ compatibility (bit ops, string.pack)
   async.lua             -- Copas-based concurrency module
@@ -136,6 +136,74 @@ src/
 luarocks install busted
 busted
 ```
+
+## Migrating from v2
+
+v3 includes a compatibility layer that lets most v2 code run with deprecation warnings. Here's what to do:
+
+### 1. Update
+
+```
+luarocks install telegram-bot-lua
+```
+
+LuaRocks handles dependency changes automatically (`lpeg` and `html-entities` removed, `copas` added).
+
+### 2. Update your require (optional but recommended)
+
+```lua
+-- v2
+local api = require('telegram-bot-lua.core').configure('TOKEN')
+
+-- v3
+local api = require('telegram-bot-lua').configure('TOKEN')
+```
+
+The old `require('telegram-bot-lua.core')` still works but prints a deprecation warning.
+
+### 3. Update method calls (optional but recommended)
+
+v3 uses options tables instead of positional args. The compat layer auto-detects v2-style calls and converts them, but you should update your code:
+
+```lua
+-- v2
+api.send_message(chat_id, text, nil, 'HTML', nil, nil, false, false, reply_params, reply_markup)
+api.send_photo(chat_id, photo, nil, 'Caption', 'HTML')
+api.answer_callback_query(id, 'Alert text', true)
+api.edit_message_text(chat_id, msg_id, text, 'HTML')
+api.run(1, 60)
+
+-- v3
+api.send_message(chat_id, text, { parse_mode = 'HTML', reply_parameters = reply_params, reply_markup = reply_markup })
+api.send_photo(chat_id, photo, { caption = 'Caption', parse_mode = 'HTML' })
+api.answer_callback_query(id, { text = 'Alert text', show_alert = true })
+api.edit_message_text(chat_id, msg_id, text, { parse_mode = 'HTML' })
+api.run({ timeout = 60 })
+```
+
+### 4. Renamed methods
+
+These v2 methods are aliased with deprecation warnings:
+
+| v2 | v3 |
+|----|-----|
+| `kick_chat_member(chat_id, user_id, until_date)` | `ban_chat_member(chat_id, user_id, opts)` |
+| `get_chat_members_count(chat_id)` | `get_chat_member_count(chat_id)` |
+
+### 5. Async is now the default
+
+`api.run()` uses copas for concurrent update processing. Each handler runs in its own coroutine. For the old sequential behaviour:
+
+```lua
+api.run({ sync = true, timeout = 60 })
+```
+
+### What doesn't need migration
+
+- Handler functions (`api.on_message`, `api.on_callback_query`, etc.) — same pattern
+- Builder methods (`api.keyboard()`, `api.inline_keyboard()`, etc.) — same API
+- Tool functions (`tools.escape_html`, `tools.comma_value`, etc.) — same API
+- No config files, secrets, or environment variables to migrate
 
 ## License
 
