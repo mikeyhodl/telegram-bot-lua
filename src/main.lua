@@ -9,7 +9,7 @@
                        __/ |
                       |___/
 
-      Version 3.3-0
+      Version 3.4-0
       Copyright (c) 2017-2026 Matthew Hesketh
       See LICENSE for details
 
@@ -20,7 +20,7 @@ local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.3-0'
+api.version = '3.4-0'
 
 function api.configure(token, debug)
     if not token or type(token) ~= 'string' then
@@ -124,6 +124,7 @@ function api.close()
 end
 
 -- Load all modules
+require('telegram-bot-lua.middleware')(api)
 require('telegram-bot-lua.handlers')(api)
 require('telegram-bot-lua.builders')(api)
 require('telegram-bot-lua.helpers')(api)
@@ -143,6 +144,7 @@ require('telegram-bot-lua.methods.checklists')(api)
 require('telegram-bot-lua.methods.stories')(api)
 require('telegram-bot-lua.methods.suggested_posts')(api)
 require('telegram-bot-lua.utils')(api)
+require('telegram-bot-lua.mcp')(api)
 require('telegram-bot-lua.async')(api)
 require('telegram-bot-lua.adapters')(api)
 require('telegram-bot-lua.compat')(api)

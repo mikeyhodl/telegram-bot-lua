@@ -32,10 +32,10 @@ return function(api)
     function api.on_deleted_business_messages(_) end
     function api.on_purchased_paid_media(_) end
 
-    function api.process_update(update)
-        if not update then
-            return false
-        end
+    -- Raw dispatch: routes an update directly to the appropriate handler.
+    -- Called by the middleware chain as the final step, or directly when
+    -- no middleware is registered.
+    function api._dispatch_update(update)
         api.on_update(update)
         if update.message then
             if update.message.chat.type == 'private' then
@@ -99,6 +99,17 @@ return function(api)
             return api.on_purchased_paid_media(update.purchased_paid_media)
         end
         return false
+    end
+
+    -- Process an update through the middleware chain (if any) then dispatch.
+    function api.process_update(update)
+        if not update then
+            return false
+        end
+        if #api._middleware > 0 or (api._scoped_middleware and next(api._scoped_middleware)) then
+            return api._run_middleware(update)
+        end
+        return api._dispatch_update(update)
     end
 
     -- Async-first run loop.
