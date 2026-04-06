@@ -162,4 +162,27 @@ return function(api)
         })
         return success, res
     end
+
+    function api.get_managed_bot_token(user_id)
+        local success, res = api.request(config.endpoint .. api.token .. '/getManagedBotToken', {
+            ['user_id'] = user_id
+        })
+        return success, res
+    end
+
+    function api.replace_managed_bot_token(user_id)
+        local success, res = api.request(config.endpoint .. api.token .. '/replaceManagedBotToken', {
+            ['user_id'] = user_id
+        })
+        return success, res
+    end
+
+    function api.save_prepared_keyboard_button(user_id, button)
+        button = type(button) == 'table' and json.encode(button) or button
+        local success, res = api.request(config.endpoint .. api.token .. '/savePreparedKeyboardButton', {
+            ['user_id'] = user_id,
+            ['button'] = button
+        })
+        return success, res
+    end
 end

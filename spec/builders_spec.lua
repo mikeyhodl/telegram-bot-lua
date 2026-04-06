@@ -153,12 +153,22 @@ describe('builders', function()
             assert.is_true(p.can_send_messages)
             assert.is_true(p.can_send_photos)
         end)
+
+        it('includes can_edit_tag', function()
+            local p = api.chat_permissions({ can_edit_tag = true })
+            assert.is_true(p.can_edit_tag)
+        end)
     end)
 
     describe('chat_administrator_rights', function()
         it('includes can_manage_direct_messages', function()
             local r = api.chat_administrator_rights({ can_manage_direct_messages = true })
             assert.is_true(r.can_manage_direct_messages)
+        end)
+
+        it('includes can_manage_tags', function()
+            local r = api.chat_administrator_rights({ can_manage_tags = true })
+            assert.is_true(r.can_manage_tags)
         end)
     end)
 
@@ -239,6 +249,15 @@ describe('builders', function()
             assert.equals(42, r.message_id)
             assert.equals(123, r.chat_id)
             assert.is_true(r.allow_sending_without_reply)
+        end)
+
+        it('includes poll_option_id and checklist_task_id', function()
+            local r = api.reply_parameters(42, 123, nil, nil, nil, nil, nil, {
+                poll_option_id = 'opt_abc',
+                checklist_task_id = 5
+            })
+            assert.equals('opt_abc', r.poll_option_id)
+            assert.equals(5, r.checklist_task_id)
         end)
     end)
 

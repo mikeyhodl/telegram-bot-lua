@@ -56,7 +56,8 @@ return function(api)
             ['can_edit_stories'] = opts.can_edit_stories,
             ['can_delete_stories'] = opts.can_delete_stories,
             ['can_manage_topics'] = opts.can_manage_topics,
-            ['can_manage_direct_messages'] = opts.can_manage_direct_messages
+            ['can_manage_direct_messages'] = opts.can_manage_direct_messages,
+            ['can_manage_tags'] = opts.can_manage_tags
         })
         return success, res
     end
@@ -90,9 +91,29 @@ return function(api)
         return success, res
     end
 
+    function api.set_chat_member_tag(chat_id, user_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/setChatMemberTag', {
+            ['chat_id'] = chat_id,
+            ['user_id'] = user_id,
+            ['tag'] = opts.tag
+        })
+        return success, res
+    end
+
     function api.get_user_profile_photos(user_id, opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getUserProfilePhotos', {
+            ['user_id'] = user_id,
+            ['offset'] = opts.offset,
+            ['limit'] = opts.limit
+        })
+        return success, res
+    end
+
+    function api.get_user_profile_audios(user_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/getUserProfileAudios', {
             ['user_id'] = user_id,
             ['offset'] = opts.offset,
             ['limit'] = opts.limit

@@ -618,7 +618,8 @@ return function(api)
             ['can_change_info'] = opts.can_change_info,
             ['can_invite_users'] = opts.can_invite_users,
             ['can_pin_messages'] = opts.can_pin_messages,
-            ['can_manage_topics'] = opts.can_manage_topics
+            ['can_manage_topics'] = opts.can_manage_topics,
+            ['can_edit_tag'] = opts.can_edit_tag
         }
     end
 
@@ -642,7 +643,8 @@ return function(api)
             ['can_edit_stories'] = opts.can_edit_stories,
             ['can_delete_stories'] = opts.can_delete_stories,
             ['can_manage_topics'] = opts.can_manage_topics,
-            ['can_manage_direct_messages'] = opts.can_manage_direct_messages
+            ['can_manage_direct_messages'] = opts.can_manage_direct_messages,
+            ['can_manage_tags'] = opts.can_manage_tags
         }
     end
 
@@ -733,8 +735,9 @@ return function(api)
 
     -- Reply parameters
 
-    function api.reply_parameters(message_id, chat_id, allow_sending_without_reply, quote, quote_parse_mode, quote_entities, quote_position)
+    function api.reply_parameters(message_id, chat_id, allow_sending_without_reply, quote, quote_parse_mode, quote_entities, quote_position, opts)
         quote_entities = type(quote_entities) == 'table' and json.encode(quote_entities) or quote_entities
+        opts = opts or {}
         return {
             ['message_id'] = tonumber(message_id),
             ['chat_id'] = chat_id,
@@ -742,7 +745,9 @@ return function(api)
             ['quote'] = quote,
             ['quote_parse_mode'] = quote_parse_mode,
             ['quote_entities'] = quote_entities,
-            ['quote_position'] = tonumber(quote_position)
+            ['quote_position'] = tonumber(quote_position),
+            ['poll_option_id'] = opts.poll_option_id,
+            ['checklist_task_id'] = opts.checklist_task_id
         }
     end
 

@@ -31,6 +31,7 @@ return function(api)
     function api.on_edited_business_message(_) end
     function api.on_deleted_business_messages(_) end
     function api.on_purchased_paid_media(_) end
+    function api.on_managed_bot(_) end
 
     -- Raw dispatch: routes an update directly to the appropriate handler.
     -- Called by the middleware chain as the final step, or directly when
@@ -97,6 +98,8 @@ return function(api)
             return api.on_deleted_business_messages(update.deleted_business_messages)
         elseif update.purchased_paid_media then
             return api.on_purchased_paid_media(update.purchased_paid_media)
+        elseif update.managed_bot then
+            return api.on_managed_bot(update.managed_bot)
         end
         return false
     end

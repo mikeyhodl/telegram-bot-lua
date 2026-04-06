@@ -446,10 +446,14 @@ return function(api)
         question_entities = type(question_entities) == 'table' and json.encode(question_entities) or question_entities
         local explanation_entities = opts.explanation_entities
         explanation_entities = type(explanation_entities) == 'table' and json.encode(explanation_entities) or explanation_entities
+        local description_entities = opts.description_entities
+        description_entities = type(description_entities) == 'table' and json.encode(description_entities) or description_entities
         local reply_parameters = opts.reply_parameters
         reply_parameters = type(reply_parameters) == 'table' and json.encode(reply_parameters) or reply_parameters
         local reply_markup = opts.reply_markup
         reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
+        local correct_option_ids = opts.correct_option_ids
+        correct_option_ids = type(correct_option_ids) == 'table' and json.encode(correct_option_ids) or correct_option_ids
         local success, res = api.request(config.endpoint .. api.token .. '/sendPoll', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
@@ -461,12 +465,20 @@ return function(api)
             ['type'] = opts.poll_type,
             ['allows_multiple_answers'] = opts.allows_multiple_answers,
             ['correct_option_id'] = opts.correct_option_id,
+            ['correct_option_ids'] = correct_option_ids,
             ['explanation'] = opts.explanation,
             ['explanation_parse_mode'] = opts.explanation_parse_mode,
             ['explanation_entities'] = explanation_entities,
             ['open_period'] = opts.open_period,
             ['close_date'] = opts.close_date,
             ['is_closed'] = opts.is_closed,
+            ['allows_revoting'] = opts.allows_revoting,
+            ['shuffle_options'] = opts.shuffle_options,
+            ['allow_adding_options'] = opts.allow_adding_options,
+            ['hide_results_until_closes'] = opts.hide_results_until_closes,
+            ['description'] = opts.description,
+            ['description_parse_mode'] = opts.description_parse_mode,
+            ['description_entities'] = description_entities,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
             ['reply_parameters'] = reply_parameters,
