@@ -25,6 +25,9 @@ local poly = require('telegram-bot-lua.polyfill')
 local band, lshift, rshift = poly.band, poly.lshift, poly.rshift
 local sunpack = poly.string_unpack
 
+--- format a number with comma-separated thousands.
+-- @param amount number|string the number to format
+-- @return string the comma-formatted number string
 function tools.comma_value(amount)
     amount = tostring(amount)
     local k
@@ -37,6 +40,9 @@ function tools.comma_value(amount)
     return amount
 end
 
+--- format milliseconds into HH:MM:SS string.
+-- @param milliseconds number the duration in milliseconds
+-- @return string the formatted time string in HH:MM:SS format
 function tools.format_ms(milliseconds)
     local total_seconds = math.floor(milliseconds / 1000)
     local seconds = total_seconds % 60
@@ -45,6 +51,10 @@ function tools.format_ms(milliseconds)
     return string.format('%02d:%02d:%02d', hours, minutes, seconds)
 end
 
+--- format seconds into a human-readable time string (e.g. "5 minutes", "2 hours").
+-- returns the largest appropriate time unit.
+-- @param seconds number the duration in seconds
+-- @return string|boolean the formatted time string, or false if input is invalid
 function tools.format_time(seconds)
     if not seconds or tonumber(seconds) == nil then
         return false
@@ -76,6 +86,10 @@ function tools.format_time(seconds)
     end
 end
 
+--- round a number to the specified number of decimal places.
+-- @param num number the number to round
+-- @param idp number optional number of decimal places (defaults to 0)
+-- @return number the rounded number
 function tools.round(num, idp)
     if idp and idp > 0 then
         local mult = 10 ^ idp
@@ -84,6 +98,9 @@ function tools.round(num, idp)
     return math.floor(num + .5)
 end
 
+--- encode a table as a pretty-printed JSON string.
+-- @param tbl table the table to encode
+-- @return string the indented JSON string
 function tools.pretty_print(tbl)
     return json.encode(tbl, {
         ['indent'] = true
@@ -93,6 +110,9 @@ end
 tools.commands_meta = {}
 tools.commands_meta.__index = tools.commands_meta
 
+--- add a command pattern to the commands table, including variants with and without bot username.
+-- @param command string the command name (without prefix)
+-- @return table self for method chaining
 function tools.commands_meta:command(command)
     table.insert(self.table, '^[/!#]' .. command .. '$')
     table.insert(self.table, '^[/!#]' .. command .. '@' .. self.username .. '$')
@@ -101,6 +121,10 @@ function tools.commands_meta:command(command)
     return self
 end
 
+--- create a new commands builder for matching bot commands.
+-- @param username string the bot username used in command patterns
+-- @param command_table table optional existing table to append patterns to
+-- @return table a commands builder with a :command() method for chaining
 function tools.commands(username, command_table)
     local self = setmetatable({}, tools.commands_meta)
     self.username = username
@@ -108,6 +132,9 @@ function tools.commands(username, command_table)
     return self
 end
 
+--- count the number of entries in a table (including non-sequential keys).
+-- @param t table the table to count
+-- @return number the number of key-value pairs
 function tools.table_size(t)
     local i = 0
     for _ in pairs(t) do
@@ -116,22 +143,37 @@ function tools.table_size(t)
     return i
 end
 
+--- escape special markdown characters in a string (v1 markdown).
+-- @param str string the string to escape
+-- @return string the escaped string
 function tools.escape_markdown(str)
     return tostring(str):gsub('_', '\\_'):gsub('%[', '\\['):gsub('*', '\\*'):gsub('`', '\\`')
 end
 
+--- escape special MarkdownV2 characters in a string.
+-- @param str string the string to escape
+-- @return string the escaped string
 function tools.escape_markdown_v2(str)
     return tostring(str):gsub('([_%*%[%]%(%)~`>#+%-%=|{}.!\\])', '\\%1')
 end
 
+--- escape special HTML characters (&, <, >) in a string.
+-- @param str string the string to escape
+-- @return string the escaped string
 function tools.escape_html(str)
     return tostring(str):gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;')
 end
 
+--- escape a string for safe use in a bash single-quoted context.
+-- @param str string the string to escape
+-- @return string the escaped string wrapped in single quotes
 function tools.escape_bash(str)
     return "'" .. tostring(str):gsub("'", "'\\''") .. "'"
 end
 
+--- count the number of UTF-8 characters in a string.
+-- @param str string the string to measure
+-- @return number the number of UTF-8 characters
 function tools.utf8_len(str)
     local chars = 0
     for i = 1, str:len() do
@@ -143,6 +185,10 @@ function tools.utf8_len(str)
     return chars
 end
 
+--- get an HTML-formatted linked name for a user by their ID.
+-- fetches the user's chat info and returns their first name as an HTML link if they have a username.
+-- @param id number the user or chat ID
+-- @return string|boolean the HTML-formatted name, or false on failure
 function tools.get_linked_name(id)
     local api = require('telegram-bot-lua')
     local success = api.get_chat(id)
@@ -156,6 +202,10 @@ function tools.get_linked_name(id)
     return output
 end
 
+--- get the i-th whitespace-delimited word from a string.
+-- @param str string the input string
+-- @param i number optional word index (defaults to 1)
+-- @return string|boolean the matched word, or false if not found
 function tools.get_word(str, i)
     if not str then
         return false
@@ -171,6 +221,9 @@ function tools.get_word(str, i)
     return false
 end
 
+--- extract the text after the first space in a string (i.e. command input).
+-- @param s string the input string
+-- @return string|boolean the text after the first space, or false if none
 function tools.input(s)
     if not s then
         return false
@@ -182,6 +235,9 @@ function tools.input(s)
     return s:sub(pos + 1)
 end
 
+--- strip leading and trailing whitespace from a string.
+-- @param str string the string to trim
+-- @return string the trimmed string
 function tools.trim(str)
     local result = str:gsub('^%s*(.-)%s*$', '%1')
     return result
@@ -196,6 +252,12 @@ tools.symbols = {
     ['bullet_point'] = utf8.char(8226)
 }
 
+--- create a formatted hyperlink for the given parse mode.
+-- supports markdown, markdownv2, and HTML (default).
+-- @param text string the display text
+-- @param link string the URL to link to
+-- @param parse_mode string|boolean the parse mode ('markdown', 'markdownv2', or HTML by default; true means 'markdown')
+-- @return string the formatted link string
 function tools.create_link(text, link, parse_mode)
     text = tostring(text)
     parse_mode = parse_mode == true and 'markdown' or tostring(parse_mode)
@@ -213,6 +275,12 @@ local function sanitize_filename(name)
     return name:gsub('%.%.', ''):gsub('[/\\]', ''):gsub('%z', '')
 end
 
+--- download a file from a URL and save it to disk.
+-- @param url string the URL to download from
+-- @param name string optional filename (defaults to timestamp with extension from URL)
+-- @param path string optional directory path to save to (defaults to /tmp/)
+-- @return string|boolean the full file path on success, or false on failure
+-- @return number|string the HTTP status code or error message on failure
 function tools.download_file(url, name, path)
     if not name then
         local ext = url:match('%.([%w]+)$') or 'bin'
@@ -254,6 +322,11 @@ function tools.download_file(url, name, path)
     return path
 end
 
+--- save data to a file in /tmp/.
+-- @param data string the data to write
+-- @param filename string the filename to write to (saved under /tmp/)
+-- @param append boolean optional flag to append instead of overwrite
+-- @return string|boolean the full file path on success, or false on failure
 function tools.save_to_file(data, filename, append)
     if not data or not filename then
         return false
@@ -270,6 +343,9 @@ function tools.save_to_file(data, filename, append)
     return full_path
 end
 
+--- check whether a file exists at the given path.
+-- @param path string the file path to check
+-- @return boolean true if the file exists, false otherwise
 function tools.file_exists(path)
     local file = io.open(path, 'rb')
     if file then
@@ -278,6 +354,9 @@ function tools.file_exists(path)
     return file ~= nil
 end
 
+--- read a file and return its lines as a table.
+-- @param path string the file path to read
+-- @return table a sequential table of lines (empty table if file not found)
 function tools.get_file_as_table(path)
     if not path or not tools.file_exists(path) then
         return {}
@@ -289,6 +368,9 @@ function tools.get_file_as_table(path)
     return lines
 end
 
+--- read the entire contents of a file as a string.
+-- @param path string the file path to read
+-- @return string|boolean the file contents, or false on failure
 function tools.read_file(path)
     if not path then
         return false
@@ -302,6 +384,9 @@ function tools.read_file(path)
     return data
 end
 
+--- read a JSON file and decode it into a lua table.
+-- @param path string the file path to the JSON file
+-- @return table the decoded table (empty table if file not found or invalid)
 function tools.json_to_table(path)
     if not path then
         return {}
@@ -314,6 +399,12 @@ function tools.json_to_table(path)
     return type(parsed) == 'table' and parsed or {}
 end
 
+--- format a user mention link with the given parse mode.
+-- generates a tg://user?id= deep link for mentioning users by ID.
+-- @param user_id number the user's ID
+-- @param name string the display name
+-- @param parse_mode string the parse mode ('html', 'markdownv2', or markdown; defaults to 'MarkdownV2')
+-- @return string|boolean the formatted user mention string, or false if missing params
 function tools.get_formatted_user(user_id, name, parse_mode)
     if not user_id or not name then
         return false
@@ -347,6 +438,10 @@ end
 
 do
     local seeded = false
+    --- generate one or more random alphanumeric strings of a given length.
+    -- @param length number the length of each random string
+    -- @param amount number optional number of strings to generate
+    -- @return string|table a single string if amount is nil, or a table of strings
     function tools.random_string(length, amount)
         if not length or tonumber(length) <= 0 then
             return ''

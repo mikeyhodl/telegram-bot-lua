@@ -9,19 +9,34 @@
                        __/ |
                       |___/
 
-      Version 3.4-0
+      Version 3.5-0
       Copyright (c) 2017-2026 Matthew Hesketh
       See LICENSE for details
 
-]] local api = {}
+]]
+
+--- telegram-bot-lua - a feature-filled telegram bot API library.
+-- supports bot API 9.6 with full method coverage, middleware, async polling,
+-- MCP server, adapters, and backward-compatible v2 shims.
+-- @module telegram-bot-lua
+-- @author Matthew Hesketh
+-- @license GPL-3
+-- @copyright 2017-2026
+
+local api = {}
 local https = require('ssl.https')
 local multipart = require('multipart-post')
 local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.4-0'
+api.version = '3.5-0'
 
+--- configure the bot with a token and optional debug mode.
+-- connects to the telegram API and retrieves bot info via getMe.
+-- @param token string the bot API token from @BotFather
+-- @param debug boolean enable debug logging of requests
+-- @return table the api object, configured and ready to use
 function api.configure(token, debug)
     if not token or type(token) ~= 'string' then
         token = nil
@@ -47,6 +62,13 @@ function api.configure(token, debug)
     return api
 end
 
+--- send a request to the telegram bot API.
+-- encodes parameters as multipart form data and handles file uploads.
+-- @param endpoint string the full API endpoint URL
+-- @param parameters table optional request parameters
+-- @param file table optional file attachments keyed by type
+-- @return table|false the decoded JSON response, or false on failure
+-- @return string|table the HTTP status or error details
 function api.request(endpoint, parameters, file)
     assert(endpoint, 'You must specify an endpoint to make this request to!')
     parameters = parameters or {}
@@ -108,16 +130,25 @@ function api.request(endpoint, parameters, file)
     return jdat, res
 end
 
+--- get basic information about the bot via getMe.
+-- @return table|false the bot user object, or false on failure
+-- @return string|table the HTTP status or error details
 function api.get_me()
     local success, res = api.request(config.endpoint .. api.token .. '/getMe')
     return success, res
 end
 
+--- log the bot out from the cloud bot API server.
+-- @return table|false true on success, or false on failure
+-- @return string|table the HTTP status or error details
 function api.log_out()
     local success, res = api.request(config.endpoint .. api.token .. '/logOut')
     return success, res
 end
 
+--- close the bot instance before moving it to a local server.
+-- @return table|false true on success, or false on failure
+-- @return string|table the HTTP status or error details
 function api.close()
     local success, res = api.request(config.endpoint .. api.token .. '/close')
     return success, res

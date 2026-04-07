@@ -1,5 +1,12 @@
+--- helper methods for common telegram bot operations.
+-- @module telegram-bot-lua.helpers
 return function(api)
 
+    --- get the permissions of a chat member as a normalised table.
+    -- returns a table with boolean values for each permission, defaulting to false.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return table|boolean permissions table, or false on failure
     function api.get_chat_member_permissions(chat_id, user_id)
         if not chat_id or not user_id then
             return false
@@ -39,6 +46,11 @@ return function(api)
         }
     end
 
+    --- check if a user has been kicked (banned) from a chat.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return boolean true if the user is kicked
+    -- @return string|number the HTTP status or the user's actual status
     function api.is_user_kicked(chat_id, user_id)
         if not chat_id or not user_id then
             return false
@@ -52,6 +64,11 @@ return function(api)
         return false, user.result.status
     end
 
+    --- check if a user is an administrator or creator in a chat.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return boolean true if the user is an admin or creator
+    -- @return string|number the HTTP status or the user's actual status
     function api.is_user_group_admin(chat_id, user_id)
         if not chat_id or not user_id then
             return false
@@ -65,6 +82,11 @@ return function(api)
         return false, user.result.status
     end
 
+    --- check if a user is the creator of a chat.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return boolean true if the user is the creator
+    -- @return string|number the HTTP status or the user's actual status
     function api.is_user_group_creator(chat_id, user_id)
         if not chat_id or not user_id then
             return false
@@ -78,6 +100,11 @@ return function(api)
         return false, user.result.status
     end
 
+    --- check if a user is restricted in a chat.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return boolean true if the user is restricted
+    -- @return string|number the HTTP status or the user's actual status
     function api.is_user_restricted(chat_id, user_id)
         if not chat_id or not user_id then
             return false
@@ -91,6 +118,11 @@ return function(api)
         return false, user.result.status
     end
 
+    --- check if a user has left a chat.
+    -- @param chat_id number|string unique identifier for the target chat
+    -- @param user_id number unique identifier of the target user
+    -- @return boolean true if the user has left
+    -- @return string|number the HTTP status or the user's actual status
     function api.has_user_left(chat_id, user_id)
         if not chat_id or not user_id then
             return false

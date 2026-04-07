@@ -1,3 +1,5 @@
+--- Redis client adapter using raw RESP protocol.
+-- @module telegram-bot-lua.adapters.redis
 --[[
     Redis adapter for telegram-bot-lua.
     Implements a lightweight Redis client using raw socket commands.
@@ -25,6 +27,14 @@
 return function(api)
     api.redis = {}
 
+    --- connect to a Redis server.
+    -- @param opts table connection options
+    -- @param opts.host string Redis host (default '127.0.0.1')
+    -- @param opts.port number Redis port (default 6379)
+    -- @param opts.password string authentication password
+    -- @param opts.db number database number to select
+    -- @param opts.timeout number connection timeout in seconds (default 5)
+    -- @return table Redis connection object with command methods
     function api.redis.connect(opts)
         opts = opts or {}
         local host = opts.host or '127.0.0.1'

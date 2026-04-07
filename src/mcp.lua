@@ -1,3 +1,5 @@
+--- MCP (model context protocol) JSON-RPC server for telegram bot tools.
+-- @module telegram-bot-lua.mcp
 return function(api)
     local json = require('dkjson')
 
@@ -447,7 +449,9 @@ return function(api)
     -- MCP protocol version
     local PROTOCOL_VERSION = '2024-11-05'
 
-    -- Handle a single JSON-RPC request and return the response string.
+    --- handle a single MCP JSON-RPC request and return the response string.
+    -- @param request string|table a JSON string or decoded request table
+    -- @return string JSON-RPC response, or nil for notifications
     function api.mcp.handle(request)
         if type(request) == 'string' then
             local ok, parsed = pcall(json.decode, request)
@@ -579,8 +583,12 @@ return function(api)
         end
     end
 
-    -- Run the MCP server: read JSON-RPC messages from stdin, write responses to stdout.
-    -- Each message is a single line of JSON.
+    --- run the MCP server over stdio.
+    -- reads JSON-RPC messages line by line from stdin and writes responses to stdout.
+    -- @param opts table optional overrides for input/output streams
+    -- @param opts.input file input stream (default io.stdin)
+    -- @param opts.write function write function (default io.write)
+    -- @param opts.flush function flush function (default io.flush)
     function api.mcp.serve(opts)
         opts = opts or {}
         local input = opts.input or io.stdin

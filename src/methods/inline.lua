@@ -1,7 +1,15 @@
+--- inline API methods.
+-- @module telegram-bot-lua.methods.inline
 return function(api)
     local json = require('dkjson')
     local config = require('telegram-bot-lua.config')
 
+    --- send answers to an inline query.
+    -- @param inline_query_id string unique identifier for the answered query
+    -- @param results string|table JSON-serialised array of InlineQueryResult or a table thereof
+    -- @param opts table optional parameters (cache_time, is_personal, next_offset, button)
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.answer_inline_query(inline_query_id, results, opts)
         opts = opts or {}
         local button = opts.button
@@ -23,6 +31,11 @@ return function(api)
         return success, res
     end
 
+    --- set the result of an interaction with a web app and send a message on behalf of the user.
+    -- @param web_app_query_id string unique identifier for the query to be answered
+    -- @param result string|table an InlineQueryResult object describing the message to send
+    -- @return table|false the sent message, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.answer_web_app_query(web_app_query_id, result)
         result = type(result) == 'table' and json.encode(result) or result
         local success, res = api.request(config.endpoint .. api.token .. '/answerWebAppQuery', {
@@ -32,6 +45,11 @@ return function(api)
         return success, res
     end
 
+    --- send answers to callback queries sent from inline keyboards.
+    -- @param callback_query_id string unique identifier for the query to be answered
+    -- @param opts table optional parameters (text, show_alert, url, cache_time)
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.answer_callback_query(callback_query_id, opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/answerCallbackQuery', {
@@ -46,6 +64,15 @@ return function(api)
 
     -- Convenience helpers for common inline patterns
 
+    --- convenience helper to answer an inline query with a single article result.
+    -- @param inline_query_id string unique identifier for the answered query
+    -- @param title string title of the article
+    -- @param description string short description of the result
+    -- @param message_text string text of the message to be sent
+    -- @param parse_mode string|boolean parse mode for the message text (true for MarkdownV2)
+    -- @param reply_markup table an InlineKeyboardMarkup object
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_inline_article(inline_query_id, title, description, message_text, parse_mode, reply_markup)
         description = description or title
         message_text = message_text or description
@@ -63,6 +90,16 @@ return function(api)
         }}))
     end
 
+    --- convenience helper to answer an inline query with a URL article result.
+    -- @param inline_query_id string unique identifier for the answered query
+    -- @param title string title of the article
+    -- @param url string URL of the result
+    -- @param hide_url boolean whether to hide the URL in the message
+    -- @param input_message_content table content of the message to be sent
+    -- @param reply_markup table an InlineKeyboardMarkup object
+    -- @param id string|number optional custom result identifier (defaults to '1')
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_inline_article_url(inline_query_id, title, url, hide_url, input_message_content, reply_markup, id)
         return api.answer_inline_query(inline_query_id, json.encode({{
             ['type'] = 'article',
@@ -75,6 +112,13 @@ return function(api)
         }}))
     end
 
+    --- convenience helper to answer an inline query with a photo result by URL.
+    -- @param inline_query_id string unique identifier for the answered query
+    -- @param photo_url string a valid URL of the photo
+    -- @param caption string caption for the photo
+    -- @param reply_markup table an InlineKeyboardMarkup object
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_inline_photo(inline_query_id, photo_url, caption, reply_markup)
         return api.answer_inline_query(inline_query_id, json.encode({{
             ['type'] = 'photo',
@@ -86,6 +130,13 @@ return function(api)
         }}))
     end
 
+    --- convenience helper to answer an inline query with a cached photo result.
+    -- @param inline_query_id string unique identifier for the answered query
+    -- @param photo_file_id string file identifier of a previously uploaded photo
+    -- @param caption string caption for the photo
+    -- @param reply_markup table an InlineKeyboardMarkup object
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_inline_cached_photo(inline_query_id, photo_file_id, caption, reply_markup)
         return api.answer_inline_query(inline_query_id, json.encode({{
             ['type'] = 'photo',

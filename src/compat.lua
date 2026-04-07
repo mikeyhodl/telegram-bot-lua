@@ -1,3 +1,5 @@
+--- legacy compatibility layer for v2 to v3 migration.
+-- @module telegram-bot-lua.compat
 -- Legacy compatibility layer for v2 -> v3 migration
 -- Provides deprecated method names, positional-arg wrappers, and
 -- require('telegram-bot-lua.core') support so v2 code runs on v3.

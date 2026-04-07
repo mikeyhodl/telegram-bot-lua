@@ -111,6 +111,14 @@ describe('handlers', function()
             api.on_purchased_paid_media = function(_) end
         end)
 
+        it('routes managed_bot update', function()
+            local called = false
+            api.on_managed_bot = function(_) called = true end
+            api.process_update({ managed_bot = { user = {}, bot = {} } })
+            assert.is_true(called)
+            api.on_managed_bot = function(_) end
+        end)
+
         it('returns false for unknown update type', function()
             assert.is_false(api.process_update({ unknown_type = {} }))
         end)
