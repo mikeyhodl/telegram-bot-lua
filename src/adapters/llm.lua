@@ -1,3 +1,5 @@
+--- LLM adapter for OpenAI and Anthropic APIs.
+-- @module telegram-bot-lua.adapters.llm
 --[[
     LLM adapter for telegram-bot-lua.
     Provides a unified interface for OpenAI and Anthropic APIs.
@@ -37,6 +39,13 @@ return function(api)
         return api.adapters.http_request(url, opts)
     end
 
+    --- create a new LLM client instance.
+    -- @param opts table provider configuration options
+    -- @param opts.provider string LLM provider: 'openai' or 'anthropic'
+    -- @param opts.api_key string API key for the provider
+    -- @param opts.model string model name (default varies by provider)
+    -- @param opts.base_url string custom API base URL
+    -- @return table LLM instance with chat, complete, and embed methods
     function api.llm.new(opts)
         assert(opts and opts.provider, 'llm.new requires a provider option (openai, anthropic)')
         assert(opts.api_key, 'llm.new requires an api_key option')

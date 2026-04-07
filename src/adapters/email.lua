@@ -1,3 +1,5 @@
+--- email (SMTP) adapter for sending mail via luasocket.
+-- @module telegram-bot-lua.adapters.email
 --[[
     Email (SMTP) adapter for telegram-bot-lua.
     Sends email via SMTP using luasocket's smtp module.
@@ -41,6 +43,14 @@
 return function(api)
     api.email = {}
 
+    --- create a new email sender instance.
+    -- @param opts table SMTP configuration options
+    -- @param opts.host string SMTP server hostname
+    -- @param opts.port number SMTP port (default 587)
+    -- @param opts.username string SMTP username
+    -- @param opts.password string SMTP password
+    -- @param opts.tls boolean enable STARTTLS (default true)
+    -- @return table email instance with send, send_text, send_html methods
     function api.email.new(opts)
         assert(opts and opts.host, 'email.new requires a host option')
 

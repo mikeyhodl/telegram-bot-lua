@@ -1,7 +1,15 @@
+--- checklists API methods.
+-- @module telegram-bot-lua.methods.checklists
 return function(api)
     local json = require('dkjson')
     local config = require('telegram-bot-lua.config')
 
+    --- send a checklist message to a chat.
+    -- @param chat_id string|number unique identifier for the target chat
+    -- @param checklist string|table JSON-serialised checklist object or a table thereof
+    -- @param opts table optional parameters (disable_notification, protect_content, reply_parameters, reply_markup)
+    -- @return table|false the sent message, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_checklist(chat_id, checklist, opts)
         opts = opts or {}
         checklist = type(checklist) == 'table' and json.encode(checklist) or checklist
@@ -20,6 +28,13 @@ return function(api)
         return success, res
     end
 
+    --- edit a task within an existing checklist message.
+    -- @param chat_id string|number unique identifier for the target chat
+    -- @param message_id number identifier of the checklist message
+    -- @param checklist_task_id string identifier of the task to edit
+    -- @param opts table optional parameters (text, is_completed)
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.edit_checklist(chat_id, message_id, checklist_task_id, opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/editChecklist', {
@@ -32,6 +47,12 @@ return function(api)
         return success, res
     end
 
+    --- add new tasks to an existing checklist message.
+    -- @param chat_id string|number unique identifier for the target chat
+    -- @param message_id number identifier of the checklist message
+    -- @param tasks string|table JSON-serialised array of tasks or a table thereof
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.add_checklist_tasks(chat_id, message_id, tasks)
         tasks = type(tasks) == 'table' and json.encode(tasks) or tasks
         local success, res = api.request(config.endpoint .. api.token .. '/addChecklistTasks', {

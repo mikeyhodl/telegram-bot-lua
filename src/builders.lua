@@ -1,16 +1,26 @@
+--- keyboard and inline markup builders.
+-- @module telegram-bot-lua.builders
 return function(api)
     local json = require('dkjson')
 
-    -- Keyboard builders
+    -- keyboard builders
 
     api.keyboard_meta = {}
     api.keyboard_meta.__index = api.keyboard_meta
 
+    --- add a row of buttons to the reply keyboard.
+    -- @param row table a row of keyboard button objects
+    -- @return table self for chaining
     function api.keyboard_meta:row(row)
         table.insert(self.keyboard, row)
         return self
     end
 
+    --- create a reply keyboard markup with a chainable builder pattern.
+    -- @param resize_keyboard boolean optional request to resize the keyboard vertically
+    -- @param one_time_keyboard boolean optional request to hide the keyboard after use
+    -- @param selective boolean optional show keyboard to specific users only
+    -- @return table a reply keyboard markup object with metatable for chaining
     function api.keyboard(resize_keyboard, one_time_keyboard, selective)
         return setmetatable({
             ['keyboard'] = {},
@@ -23,11 +33,16 @@ return function(api)
     api.inline_keyboard_meta = {}
     api.inline_keyboard_meta.__index = api.inline_keyboard_meta
 
+    --- add a row of buttons to the inline keyboard.
+    -- @param row table a row of inline keyboard button objects
+    -- @return table self for chaining
     function api.inline_keyboard_meta:row(row)
         table.insert(self.inline_keyboard, row)
         return self
     end
 
+    --- create an inline keyboard markup with a chainable builder pattern.
+    -- @return table an inline keyboard markup object with metatable for chaining
     function api.inline_keyboard()
         return setmetatable({
             ['inline_keyboard'] = {}
@@ -39,6 +54,10 @@ return function(api)
     api.row_meta = {}
     api.row_meta.__index = api.row_meta
 
+    --- add a url button to the row.
+    -- @param text string label text for the button
+    -- @param url string http or tg:// url to open when the button is pressed
+    -- @return table self for chaining
     function api.row_meta:url_button(text, url)
         table.insert(self, {
             ['text'] = tostring(text),
@@ -47,6 +66,10 @@ return function(api)
         return self
     end
 
+    --- add a callback data button to the row.
+    -- @param text string label text for the button
+    -- @param callback_data string data to be sent in a callback query when the button is pressed
+    -- @return table self for chaining
     function api.row_meta:callback_data_button(text, callback_data)
         table.insert(self, {
             ['text'] = tostring(text),
@@ -55,6 +78,10 @@ return function(api)
         return self
     end
 
+    --- add a switch inline query button to the row.
+    -- @param text string label text for the button
+    -- @param switch_inline_query string query to insert into the chat input when switching to inline mode
+    -- @return table self for chaining
     function api.row_meta:switch_inline_query_button(text, switch_inline_query)
         table.insert(self, {
             ['text'] = tostring(text),
@@ -63,6 +90,10 @@ return function(api)
         return self
     end
 
+    --- add a switch inline query current chat button to the row.
+    -- @param text string label text for the button
+    -- @param switch_inline_query_current_chat string query to insert into the current chat input for inline mode
+    -- @return table self for chaining
     function api.row_meta:switch_inline_query_current_chat_button(text, switch_inline_query_current_chat)
         table.insert(self, {
             ['text'] = tostring(text),
@@ -71,6 +102,10 @@ return function(api)
         return self
     end
 
+    --- add a pay button to the row.
+    -- @param text string label text for the button
+    -- @param pay boolean whether this is a pay button
+    -- @return table self for chaining
     function api.row_meta:pay_button(text, pay)
         table.insert(self, {
             ['text'] = tostring(text),
@@ -79,12 +114,19 @@ return function(api)
         return self
     end
 
+    --- create a row of inline keyboard buttons with a chainable builder pattern.
+    -- @return table a row object with metatable for chaining button additions
     function api.row(_)
         return setmetatable({}, api.row_meta)
     end
 
     -- Standalone button constructors
 
+    --- create a standalone url inline keyboard button.
+    -- @param text string label text for the button
+    -- @param url string http or tg:// url to open when the button is pressed
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.url_button(text, url, encoded)
         if not text or not url then
             return false
@@ -99,6 +141,11 @@ return function(api)
         return button
     end
 
+    --- create a standalone callback data inline keyboard button.
+    -- @param text string label text for the button
+    -- @param callback_data string data to be sent in a callback query when pressed
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.callback_data_button(text, callback_data, encoded)
         if not text or not callback_data then
             return false
@@ -113,6 +160,11 @@ return function(api)
         return button
     end
 
+    --- create a standalone switch inline query button.
+    -- @param text string label text for the button
+    -- @param switch_inline_query string query to insert when switching to inline mode in another chat
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.switch_inline_query_button(text, switch_inline_query, encoded)
         if not text or not switch_inline_query then
             return false
@@ -127,6 +179,11 @@ return function(api)
         return button
     end
 
+    --- create a standalone switch inline query current chat button.
+    -- @param text string label text for the button
+    -- @param switch_inline_query_current_chat string query to insert into the current chat for inline mode
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.switch_inline_query_current_chat_button(text, switch_inline_query_current_chat, encoded)
         if not text or not switch_inline_query_current_chat then
             return false
@@ -141,6 +198,11 @@ return function(api)
         return button
     end
 
+    --- create a standalone callback game inline keyboard button.
+    -- @param text string label text for the button
+    -- @param callback_game string description of the game to be launched
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.callback_game_button(text, callback_game, encoded)
         if not text or not callback_game then
             return false
@@ -155,6 +217,11 @@ return function(api)
         return button
     end
 
+    --- create a standalone pay inline keyboard button.
+    -- @param text string label text for the button
+    -- @param pay boolean whether this is a pay button
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the button object, json string if encoded, or false on missing params
     function api.pay_button(text, pay, encoded)
         if not text or pay == nil then
             return false
@@ -169,6 +236,9 @@ return function(api)
         return button
     end
 
+    --- create a remove keyboard markup to request removal of the custom keyboard.
+    -- @param selective boolean optional remove keyboard for specific users only
+    -- @return table a ReplyKeyboardRemove object
     function api.remove_keyboard(selective)
         return {
             ['remove_keyboard'] = true,
@@ -181,6 +251,10 @@ return function(api)
     api.prices_meta = {}
     api.prices_meta.__index = api.prices_meta
 
+    --- add a labelled price to the prices array.
+    -- @param label string price label, e.g. "product price"
+    -- @param amount number price in the smallest units of the currency
+    -- @return table self for chaining
     function api.prices_meta:labeled_price(label, amount)
         table.insert(self, {
             ['label'] = tostring(label),
@@ -189,6 +263,8 @@ return function(api)
         return self
     end
 
+    --- create a prices array with a chainable builder pattern for payment invoices.
+    -- @return table a prices array object with metatable for chaining
     function api.prices()
         return setmetatable({}, api.prices_meta)
     end
@@ -198,6 +274,11 @@ return function(api)
     api.shipping_options_meta = {}
     api.shipping_options_meta.__index = api.shipping_options_meta
 
+    --- add a shipping option to the shipping options array.
+    -- @param id string unique identifier for the shipping option
+    -- @param title string display name for the shipping option
+    -- @param prices table array of labelled price objects for this option
+    -- @return table self for chaining
     function api.shipping_options_meta:shipping_option(id, title, prices)
         table.insert(self, {
             ['id'] = tostring(id),
@@ -207,12 +288,19 @@ return function(api)
         return self
     end
 
+    --- create a shipping options array with a chainable builder pattern.
+    -- @return table a shipping options array object with metatable for chaining
     function api.shipping_options()
         return setmetatable({}, api.shipping_options_meta)
     end
 
     -- Labeled price constructor
 
+    --- create a standalone labelled price object for payment invoices.
+    -- @param label string price label, e.g. "product price"
+    -- @param amount number price in the smallest units of the currency
+    -- @param encoded boolean optional json-encode the result
+    -- @return table|string|boolean the labelled price object, json string if encoded, or false on invalid params
     function api.labeled_price(label, amount, encoded)
         if not label or not amount or tonumber(amount) == nil then
             return false
@@ -232,6 +320,12 @@ return function(api)
     api.mask_position_meta = {}
     api.mask_position_meta.__index = api.mask_position_meta
 
+    --- add a mask position entry specifying where a mask should be placed on a face.
+    -- @param point string the part of the face to place the mask on ("forehead", "eyes", "mouth", or "chin")
+    -- @param x_shift number shift by x-axis measured in widths of the mask
+    -- @param y_shift number shift by y-axis measured in heights of the mask
+    -- @param scale number mask scaling coefficient
+    -- @return table self for chaining
     function api.mask_position_meta:position(point, x_shift, y_shift, scale)
         table.insert(self, {
             ['point'] = tostring(point),
@@ -242,12 +336,19 @@ return function(api)
         return self
     end
 
+    --- create a mask position array with a chainable builder pattern.
+    -- @return table a mask position array object with metatable for chaining
     function api.mask_position()
         return setmetatable({}, api.mask_position_meta)
     end
 
     -- Input media builders
 
+    --- create an input media photo object for use with sendMediaGroup and editMessageMedia.
+    -- @param media string file_id, url, or file path for the photo
+    -- @param caption string optional caption for the photo
+    -- @param parse_mode string optional parse mode for the caption ("MarkdownV2", "HTML", etc.)
+    -- @return table,table the input media object and a table of file references
     function api.input_media_photo(media, caption, parse_mode)
         return {
             ['type'] = 'photo',
@@ -258,6 +359,16 @@ return function(api)
         }
     end
 
+    --- create an input media video object for use with sendMediaGroup and editMessageMedia.
+    -- @param media string file_id, url, or file path for the video
+    -- @param thumbnail string optional thumbnail file_id or file path
+    -- @param caption string optional caption for the video
+    -- @param parse_mode string optional parse mode for the caption
+    -- @param width number optional video width
+    -- @param height number optional video height
+    -- @param duration number optional video duration in seconds
+    -- @param supports_streaming boolean optional whether the video is suitable for streaming
+    -- @return table,table the input media object and a table of file references
     function api.input_media_video(media, thumbnail, caption, parse_mode, width, height, duration, supports_streaming)
         return {
             ['type'] = 'video',

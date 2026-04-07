@@ -1,3 +1,5 @@
+--- async polling and concurrency via copas.
+-- @module telegram-bot-lua.async
 --[[
     Async module for telegram-bot-lua.
     Provides coroutine-based concurrency via copas for non-blocking
@@ -34,8 +36,12 @@ return function(api)
     api.async = {}
     api.async._running = false
 
-    -- Non-blocking HTTP request using copas.
-    -- Has the same signature as api.request but uses copas.http.
+    --- non-blocking HTTP request using copas.
+    -- has the same signature as api.request but uses copas.http.
+    -- @param endpoint string the full API endpoint URL
+    -- @param parameters table optional request parameters
+    -- @param file table optional file upload map
+    -- @return table decoded JSON response, or false on error
     function api.async.request(endpoint, parameters, file)
         assert(endpoint, 'You must specify an endpoint to make this request to!')
         parameters = parameters or {}
@@ -96,9 +102,10 @@ return function(api)
         return jdat, res
     end
 
-    -- Run the bot with concurrent update processing.
-    -- Each update is dispatched to its own coroutine so a slow handler
+    --- run the bot with concurrent update processing.
+    -- each update is dispatched to its own coroutine so a slow handler
     -- won't block processing of other updates.
+    -- @param opts table polling options (limit, timeout, offset, allowed_updates)
     function api.async.run(opts)
         opts = opts or {}
         local limit = tonumber(opts.limit) or 1
@@ -141,14 +148,15 @@ return function(api)
         api.async._running = false
     end
 
-    -- Stop the async run loop.
+    --- stop the async run loop.
     function api.async.stop()
         api.async._running = false
     end
 
-    -- Run multiple functions concurrently and collect results.
-    -- Each function runs in its own coroutine. Returns when all complete.
-    -- Results are returned in order: { {ok, result, ...}, {ok, result, ...} }
+    --- run multiple functions concurrently and collect results.
+    -- each function runs in its own coroutine. returns when all complete.
+    -- @param fns table array of functions to execute in parallel
+    -- @return table results in order: { {value, ...}, {false, error}, ... }
     function api.async.all(fns)
         if not fns or #fns == 0 then
             return {}
@@ -194,18 +202,21 @@ return function(api)
         return unwrapped
     end
 
-    -- Spawn a background coroutine within the copas event loop.
-    -- Returns the copas thread.
+    --- spawn a background coroutine within the copas event loop.
+    -- @param fn function the function to run in a new coroutine
+    -- @return thread the copas thread
     function api.async.spawn(fn)
         return copas.addthread(fn)
     end
 
-    -- Non-blocking sleep. Only works within a copas coroutine context.
+    --- non-blocking sleep (only works within a copas coroutine).
+    -- @param seconds number duration to sleep
     function api.async.sleep(seconds)
         copas.sleep(seconds)
     end
 
-    -- Check if we're currently inside the async event loop.
+    --- check if we're currently inside the async event loop.
+    -- @return boolean true if the async loop is active
     function api.async.is_running()
         return api.async._running
     end

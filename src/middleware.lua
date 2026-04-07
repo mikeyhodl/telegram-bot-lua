@@ -1,8 +1,12 @@
+--- middleware system for intercepting and processing updates.
+-- @module telegram-bot-lua.middleware
 return function(api)
 
     api._middleware = {}
     api._scoped_middleware = {}
 
+    --- register a global middleware function.
+    -- @param fn function middleware receiving (ctx, next) arguments
     function api.use(fn)
         table.insert(api._middleware, fn)
     end
@@ -51,7 +55,8 @@ return function(api)
         return ctx
     end
 
-    -- Execute middleware chain then dispatch to handlers.
+    --- execute the middleware chain then dispatch to handlers.
+    -- @param update table the raw update object
     function api._run_middleware(update)
         local ctx = build_context(update)
 

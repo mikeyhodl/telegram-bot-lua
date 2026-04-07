@@ -1,7 +1,19 @@
+--- stickers API methods.
+-- @module telegram-bot-lua.methods.stickers
 return function(api)
     local json = require('dkjson')
     local config = require('telegram-bot-lua.config')
 
+    --- send a static, animated, or video sticker.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target channel
+    -- @param sticker string sticker to send (file_id, HTTP URL, or file upload)
+    -- @param opts table optional parameters
+    -- @param opts.message_thread_id number unique identifier for the target message thread
+    -- @param opts.emoji string emoji associated with the sticker
+    -- @param opts.disable_notification boolean sends the message silently
+    -- @param opts.reply_parameters table|string description of the message to reply to
+    -- @param opts.reply_markup table|string additional interface options
+    -- @return table,number the response object and HTTP status
     function api.send_sticker(chat_id, sticker, opts)
         opts = opts or {}
         local reply_parameters = opts.reply_parameters
@@ -25,6 +37,9 @@ return function(api)
         return success, res
     end
 
+    --- get a sticker set by name.
+    -- @param name string name of the sticker set
+    -- @return table,number the response object and HTTP status
     function api.get_sticker_set(name)
         local success, res = api.request(config.endpoint .. api.token .. '/getStickerSet', {
             ['name'] = name
@@ -32,6 +47,9 @@ return function(api)
         return success, res
     end
 
+    --- get information about custom emoji stickers by their identifiers.
+    -- @param custom_emoji_ids table|string a JSON-serialized list of custom emoji identifiers
+    -- @return table,number the response object and HTTP status
     function api.get_custom_emoji_stickers(custom_emoji_ids)
         custom_emoji_ids = type(custom_emoji_ids) == 'table' and json.encode(custom_emoji_ids) or custom_emoji_ids
         local success, res = api.request(config.endpoint .. api.token .. '/getCustomEmojiStickers', {
@@ -40,6 +58,11 @@ return function(api)
         return success, res
     end
 
+    --- upload a sticker file for later use in sticker sets.
+    -- @param user_id number unique identifier of the sticker file owner
+    -- @param sticker string the sticker file to upload
+    -- @param sticker_format string format of the sticker (static, animated, video)
+    -- @return table,number the response object and HTTP status
     function api.upload_sticker_file(user_id, sticker, sticker_format)
         local success, res = api.request(config.endpoint .. api.token .. '/uploadStickerFile', {
             ['user_id'] = user_id,
@@ -50,6 +73,15 @@ return function(api)
         return success, res
     end
 
+    --- create a new sticker set owned by a user.
+    -- @param user_id number unique identifier of the created sticker set owner
+    -- @param name string short name of the sticker set
+    -- @param title string sticker set title (1-64 characters)
+    -- @param stickers table|string a JSON-serialized list of stickers to be added to the set
+    -- @param opts table optional parameters
+    -- @param opts.sticker_type string type of stickers in the set
+    -- @param opts.needs_repainting boolean pass true if stickers need repainting to match emoji colour
+    -- @return table,number the response object and HTTP status
     function api.create_new_sticker_set(user_id, name, title, stickers, opts)
         opts = opts or {}
         stickers = type(stickers) == 'table' and json.encode(stickers) or stickers
@@ -64,6 +96,11 @@ return function(api)
         return success, res
     end
 
+    --- add a new sticker to a set created by the bot.
+    -- @param user_id number unique identifier of the sticker set owner
+    -- @param name string sticker set name
+    -- @param sticker table|string a JSON-serialized object with information about the sticker
+    -- @return table,number the response object and HTTP status
     function api.add_sticker_to_set(user_id, name, sticker)
         sticker = type(sticker) == 'table' and json.encode(sticker) or sticker
         local success, res = api.request(config.endpoint .. api.token .. '/addStickerToSet', {
@@ -74,6 +111,10 @@ return function(api)
         return success, res
     end
 
+    --- move a sticker in a set created by the bot to a specific position.
+    -- @param sticker string file identifier of the sticker
+    -- @param position number new sticker position in the set (zero-based)
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_position_in_set(sticker, position)
         local success, res = api.request(config.endpoint .. api.token .. '/setStickerPositionInSet', {
             ['sticker'] = sticker,
@@ -82,6 +123,9 @@ return function(api)
         return success, res
     end
 
+    --- delete a sticker from a set created by the bot.
+    -- @param sticker string file identifier of the sticker
+    -- @return table,number the response object and HTTP status
     function api.delete_sticker_from_set(sticker)
         local success, res = api.request(config.endpoint .. api.token .. '/deleteStickerFromSet', {
             ['sticker'] = sticker
@@ -89,6 +133,12 @@ return function(api)
         return success, res
     end
 
+    --- replace an existing sticker in a sticker set with a new one.
+    -- @param user_id number unique identifier of the sticker set owner
+    -- @param name string sticker set name
+    -- @param old_sticker string file identifier of the sticker to be replaced
+    -- @param sticker table|string a JSON-serialized object with information about the new sticker
+    -- @return table,number the response object and HTTP status
     function api.replace_sticker_in_set(user_id, name, old_sticker, sticker)
         sticker = type(sticker) == 'table' and json.encode(sticker) or sticker
         local success, res = api.request(config.endpoint .. api.token .. '/replaceStickerInSet', {
@@ -100,6 +150,10 @@ return function(api)
         return success, res
     end
 
+    --- change the list of emoji assigned to a regular or custom emoji sticker.
+    -- @param sticker string file identifier of the sticker
+    -- @param emoji_list table|string a JSON-serialized list of 1-20 emoji associated with the sticker
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_emoji_list(sticker, emoji_list)
         emoji_list = type(emoji_list) == 'table' and json.encode(emoji_list) or emoji_list
         local success, res = api.request(config.endpoint .. api.token .. '/setStickerEmojiList', {
@@ -109,6 +163,10 @@ return function(api)
         return success, res
     end
 
+    --- change search keywords assigned to a regular or custom emoji sticker.
+    -- @param sticker string file identifier of the sticker
+    -- @param keywords table|string a JSON-serialized list of 0-20 search keywords
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_keywords(sticker, keywords)
         keywords = type(keywords) == 'table' and json.encode(keywords) or keywords
         local success, res = api.request(config.endpoint .. api.token .. '/setStickerKeywords', {
@@ -118,6 +176,10 @@ return function(api)
         return success, res
     end
 
+    --- change the mask position of a mask sticker.
+    -- @param sticker string file identifier of the sticker
+    -- @param mask_position table|string a JSON-serialized object with the position where the mask should be placed
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_mask_position(sticker, mask_position)
         mask_position = type(mask_position) == 'table' and json.encode(mask_position) or mask_position
         local success, res = api.request(config.endpoint .. api.token .. '/setStickerMaskPosition', {
@@ -127,6 +189,10 @@ return function(api)
         return success, res
     end
 
+    --- set the title of a created sticker set. truncated to 64 characters.
+    -- @param name string sticker set name
+    -- @param title string sticker set title (max 64 characters)
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_set_title(name, title)
         title = tostring(title)
         if title:len() > 64 then
@@ -139,6 +205,13 @@ return function(api)
         return success, res
     end
 
+    --- set the thumbnail of a regular or mask sticker set.
+    -- @param name string sticker set name
+    -- @param user_id number unique identifier of the sticker set owner
+    -- @param opts table optional parameters
+    -- @param opts.thumbnail string thumbnail file (file upload)
+    -- @param opts.format string format of the thumbnail
+    -- @return table,number the response object and HTTP status
     function api.set_sticker_set_thumbnail(name, user_id, opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/setStickerSetThumbnail', {
@@ -151,6 +224,11 @@ return function(api)
         return success, res
     end
 
+    --- set the thumbnail of a custom emoji sticker set.
+    -- @param name string sticker set name
+    -- @param opts table optional parameters
+    -- @param opts.custom_emoji_id string custom emoji identifier of a sticker from the set to use as the thumbnail
+    -- @return table,number the response object and HTTP status
     function api.set_custom_emoji_sticker_set_thumbnail(name, opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/setCustomEmojiStickerSetThumbnail', {
@@ -160,6 +238,9 @@ return function(api)
         return success, res
     end
 
+    --- delete a sticker set that was created by the bot.
+    -- @param name string sticker set name
+    -- @return table,number the response object and HTTP status
     function api.delete_sticker_set(name)
         local success, res = api.request(config.endpoint .. api.token .. '/deleteStickerSet', {
             ['name'] = name

@@ -1,7 +1,12 @@
+--- bot API methods.
+-- @module telegram-bot-lua.methods.bot
 return function(api)
     local json = require('dkjson')
     local config = require('telegram-bot-lua.config')
 
+    --- get basic info about a file and prepare it for downloading.
+    -- @param file_id string file identifier to get info about
+    -- @return table,number the response object and HTTP status
     function api.get_file(file_id)
         local success, res = api.request(config.endpoint .. api.token .. '/getFile', {
             ['file_id'] = file_id
@@ -9,6 +14,12 @@ return function(api)
         return success, res
     end
 
+    --- change the list of the bot's commands.
+    -- @param commands table|string a JSON-serialized or encoded list of BotCommand
+    -- @param opts table optional parameters
+    -- @param opts.scope table|string a JSON-serialized scope of users for which commands are relevant
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.set_my_commands(commands, opts)
         opts = opts or {}
         commands = type(commands) == 'table' and json.encode(commands) or commands
@@ -22,6 +33,11 @@ return function(api)
         return success, res
     end
 
+    --- delete the list of the bot's commands for the given scope and language.
+    -- @param opts table optional parameters
+    -- @param opts.scope table|string a JSON-serialized scope of users for which commands are relevant
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.delete_my_commands(opts)
         opts = opts or {}
         local scope = opts.scope
@@ -33,6 +49,11 @@ return function(api)
         return success, res
     end
 
+    --- get the current list of the bot's commands for the given scope and language.
+    -- @param opts table optional parameters
+    -- @param opts.scope table|string a JSON-serialized scope of users for which commands are relevant
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.get_my_commands(opts)
         opts = opts or {}
         local scope = opts.scope
@@ -44,6 +65,11 @@ return function(api)
         return success, res
     end
 
+    --- change the bot's name. truncated to 64 characters.
+    -- @param name string new bot name (max 64 characters)
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.set_my_name(name, opts)
         opts = opts or {}
         name = tostring(name)
@@ -57,6 +83,10 @@ return function(api)
         return success, res
     end
 
+    --- get the current bot name for the given language.
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.get_my_name(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getMyName', {
@@ -65,6 +95,11 @@ return function(api)
         return success, res
     end
 
+    --- change the bot's description. truncated to 512 characters.
+    -- @param description string new bot description (max 512 characters)
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.set_my_description(description, opts)
         opts = opts or {}
         description = tostring(description)
@@ -78,6 +113,10 @@ return function(api)
         return success, res
     end
 
+    --- get the current bot description for the given language.
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.get_my_description(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getMyDescription', {
@@ -86,6 +125,11 @@ return function(api)
         return success, res
     end
 
+    --- change the bot's short description. truncated to 120 characters.
+    -- @param short_description string new short description (max 120 characters)
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.set_my_short_description(short_description, opts)
         opts = opts or {}
         short_description = tostring(short_description)
@@ -99,6 +143,10 @@ return function(api)
         return success, res
     end
 
+    --- get the current bot short description for the given language.
+    -- @param opts table optional parameters
+    -- @param opts.language_code string a two-letter ISO 639-1 language code
+    -- @return table,number the response object and HTTP status
     function api.get_my_short_description(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getMyShortDescription', {
@@ -107,6 +155,11 @@ return function(api)
         return success, res
     end
 
+    --- change the bot's menu button in a private chat or the default menu button.
+    -- @param opts table optional parameters
+    -- @param opts.chat_id number|string unique identifier for the target private chat
+    -- @param opts.menu_button table|string a JSON-serialized object for the bot's new menu button
+    -- @return table,number the response object and HTTP status
     function api.set_chat_menu_button(opts)
         opts = opts or {}
         local menu_button = opts.menu_button
@@ -118,6 +171,10 @@ return function(api)
         return success, res
     end
 
+    --- get the current value of the bot's menu button in a private chat or the default menu button.
+    -- @param opts table optional parameters
+    -- @param opts.chat_id number|string unique identifier for the target private chat
+    -- @return table,number the response object and HTTP status
     function api.get_chat_menu_button(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getChatMenuButton', {
@@ -126,6 +183,11 @@ return function(api)
         return success, res
     end
 
+    --- change the default administrator rights requested by the bot when it's added to groups or channels.
+    -- @param opts table optional parameters
+    -- @param opts.rights table|string a JSON-serialized object describing new default administrator rights
+    -- @param opts.for_channels boolean pass true to change the default rights for channels
+    -- @return table,number the response object and HTTP status
     function api.set_my_default_administrator_rights(opts)
         opts = opts or {}
         local rights = opts.rights
@@ -137,6 +199,10 @@ return function(api)
         return success, res
     end
 
+    --- get the current default administrator rights of the bot.
+    -- @param opts table optional parameters
+    -- @param opts.for_channels boolean pass true to get the default rights for channels
+    -- @return table,number the response object and HTTP status
     function api.get_my_default_administrator_rights(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getMyDefaultAdministratorRights', {
@@ -145,6 +211,11 @@ return function(api)
         return success, res
     end
 
+    --- set the bot's profile photo.
+    -- @param opts table optional parameters
+    -- @param opts.photo string the photo to set as the bot's profile photo (file upload)
+    -- @param opts.is_public boolean pass true to set the public photo
+    -- @return table,number the response object and HTTP status
     function api.set_my_profile_photo(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/setMyProfilePhoto', {
@@ -155,6 +226,10 @@ return function(api)
         return success, res
     end
 
+    --- remove the bot's profile photo.
+    -- @param opts table optional parameters
+    -- @param opts.is_public boolean pass true to remove the public photo
+    -- @return table,number the response object and HTTP status
     function api.remove_my_profile_photo(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/removeMyProfilePhoto', {
@@ -163,6 +238,9 @@ return function(api)
         return success, res
     end
 
+    --- get the token of a managed bot.
+    -- @param user_id number unique identifier of the managed bot user
+    -- @return table,number the response object and HTTP status
     function api.get_managed_bot_token(user_id)
         local success, res = api.request(config.endpoint .. api.token .. '/getManagedBotToken', {
             ['user_id'] = user_id
@@ -170,6 +248,9 @@ return function(api)
         return success, res
     end
 
+    --- replace the token of a managed bot with a new one.
+    -- @param user_id number unique identifier of the managed bot user
+    -- @return table,number the response object and HTTP status
     function api.replace_managed_bot_token(user_id)
         local success, res = api.request(config.endpoint .. api.token .. '/replaceManagedBotToken', {
             ['user_id'] = user_id
@@ -177,6 +258,10 @@ return function(api)
         return success, res
     end
 
+    --- save a prepared keyboard button for later use.
+    -- @param user_id number unique identifier of the target user
+    -- @param button table|string a JSON-serialized keyboard button to save
+    -- @return table,number the response object and HTTP status
     function api.save_prepared_keyboard_button(user_id, button)
         button = type(button) == 'table' and json.encode(button) or button
         local success, res = api.request(config.endpoint .. api.token .. '/savePreparedKeyboardButton', {
