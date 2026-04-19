@@ -1,5 +1,7 @@
 # telegram-bot-lua
 
+[![audited by auto-audit](https://img.shields.io/badge/audited_by-auto--audit-6366f1?logo=github&logoColor=white)](https://auto-audit.hesketh.pro)
+
 A feature-filled Telegram bot API library written in Lua, created by [Matt](https://t.me/wrxck). Supports Bot API 9.4 with full coverage of all available methods.
 
 ## Installation
