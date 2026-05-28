@@ -74,7 +74,12 @@ return function(api)
         parameters = next(parameters) == nil and {''} or parameters
         local response = {}
         local body, boundary = multipart.encode(parameters)
-        local success, res = copas_http.request({
+        -- copas wraps socket ops in copas.try and raises on conditions like
+        -- 'wantread' or 'unexpected eof while reading' when the telegram
+        -- server closes the long-poll connection at the exact timeout
+        -- boundary. without pcall those errors escape the coroutine, kill
+        -- the polling thread, and crash the bot. cf. issue #46.
+        local pok, success, res = pcall(copas_http.request, {
             ['url'] = endpoint,
             ['method'] = 'POST',
             ['headers'] = {
@@ -84,6 +89,10 @@ return function(api)
             ['source'] = ltn12.source.string(body),
             ['sink'] = ltn12.sink.table(response)
         })
+        if not pok then
+            print('Connection error [' .. tostring(success) .. ']')
+            return false, success
+        end
         if not success then
             print('Connection error [' .. tostring(res) .. ']')
             return false, res
@@ -118,17 +127,31 @@ return function(api)
         api.request = api.async.request
         api.async._running = true
 
+        -- backoff state for transient polling failures: start at 1s, double
+        -- on each consecutive failure up to 30s, reset on the next success.
+        -- prevents a hot loop when telegram is unreachable or the long-poll
+        -- keeps eof'ing.
+        local backoff = 1
+        local max_backoff = 30
+
         copas.addthread(function()
             while api.async._running do
-                local updates = api.get_updates({
+                local pok, updates = pcall(api.get_updates, {
                     timeout = timeout,
                     offset = offset,
                     limit = limit,
                     allowed_updates = allowed_updates
                 })
-                if updates and type(updates) == 'table' and updates.result then
+                if not pok then
+                    if api.debug then
+                        print('Polling error [' .. tostring(updates) .. '], backing off ' .. backoff .. 's')
+                    end
+                    copas.sleep(backoff)
+                    backoff = math.min(backoff * 2, max_backoff)
+                elseif updates and type(updates) == 'table' and updates.result then
+                    backoff = 1
                     for _, v in pairs(updates.result) do
-                        -- Each update gets its own coroutine
+                        -- each update gets its own coroutine
                         copas.addthread(function()
                             local ok, err = pcall(api.process_update, v)
                             if not ok and api.debug then
@@ -137,6 +160,14 @@ return function(api)
                         end)
                         offset = v.update_id + 1
                     end
+                else
+                    -- get_updates returned false or a malformed payload. back
+                    -- off so a sustained server-side error doesn't pin a cpu.
+                    if api.debug then
+                        print('Polling returned no result, backing off ' .. backoff .. 's')
+                    end
+                    copas.sleep(backoff)
+                    backoff = math.min(backoff * 2, max_backoff)
                 end
             end
         end)

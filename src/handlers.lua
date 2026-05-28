@@ -200,8 +200,13 @@ return function(api)
         if opts.sync then
             return api._run_sync(opts)
         end
-        -- Default: async via copas
+        -- default: async via copas
         return api.async.run(opts)
+    end
+
+    --- request that the synchronous polling loop exit at its next iteration.
+    function api.stop_sync()
+        api._sync_running = false
     end
 
     --- single-threaded synchronous polling loop (opt-in via sync = true).
@@ -213,19 +218,50 @@ return function(api)
         local offset = tonumber(opts.offset) or 0
         local allowed_updates = opts.allowed_updates
         local use_beta_endpoint = opts.use_beta_endpoint
-        while true do
-            local updates = api.get_updates({
+        api._sync_running = true
+        -- backoff state for transient polling failures: start at 1s, double
+        -- on each consecutive failure up to 30s, reset on the next success.
+        local backoff = 1
+        local max_backoff = 30
+        -- sleeper is injectable so tests can fast-forward backoff without
+        -- the loop actually sleeping. defaults to a real wall-clock sleep
+        -- using socket.select (avoids spawning a shell, unlike os.execute).
+        local sleeper = opts._sleeper or function(seconds)
+            local ok, socket = pcall(require, 'socket')
+            if ok and socket and socket.sleep then
+                socket.sleep(seconds)
+            else
+                os.execute('sleep ' .. tostring(math.max(1, math.floor(seconds))))
+            end
+        end
+        while api._sync_running do
+            local pok, updates = pcall(api.get_updates, {
                 timeout = timeout,
                 offset = offset,
                 limit = limit,
                 allowed_updates = allowed_updates,
                 use_beta_endpoint = use_beta_endpoint
             })
-            if updates and type(updates) == 'table' and updates.result then
+            if not pok then
+                if api.debug then
+                    print('Polling error [' .. tostring(updates) .. '], backing off ' .. backoff .. 's')
+                end
+                sleeper(backoff)
+                backoff = math.min(backoff * 2, max_backoff)
+            elseif updates and type(updates) == 'table' and updates.result then
+                backoff = 1
                 for _, v in pairs(updates.result) do
                     api.process_update(v)
                     offset = v.update_id + 1
                 end
+            else
+                -- get_updates returned false or a malformed payload. back off
+                -- so a sustained server-side error doesn't pin a cpu.
+                if api.debug then
+                    print('Polling returned no result, backing off ' .. backoff .. 's')
+                end
+                sleeper(backoff)
+                backoff = math.min(backoff * 2, max_backoff)
             end
         end
     end

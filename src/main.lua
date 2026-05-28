@@ -102,7 +102,11 @@ function api.request(endpoint, parameters, file)
     parameters = next(parameters) == nil and {''} or parameters
     local response = {}
     local body, boundary = multipart.encode(parameters)
-    local success, res = https.request({
+    -- luasec can raise on transient ssl / socket faults (peer closed mid-read,
+    -- handshake aborted, dns blip). historically these propagated as lua errors
+    -- and tore down the polling loop. wrap so the caller always gets a
+    -- (false, err) return and can decide whether to retry.
+    local pok, success, res = pcall(https.request, {
         ['url'] = endpoint,
         ['method'] = 'POST',
         ['headers'] = {
@@ -112,6 +116,10 @@ function api.request(endpoint, parameters, file)
         ['source'] = ltn12.source.string(body),
         ['sink'] = ltn12.sink.table(response)
     })
+    if not pok then
+        print('Connection error [' .. tostring(success) .. ']')
+        return false, success
+    end
     if not success then
         print('Connection error [' .. tostring(res) .. ']')
         return false, res
