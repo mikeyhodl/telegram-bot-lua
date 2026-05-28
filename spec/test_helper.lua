@@ -56,17 +56,22 @@ api.token = 'test:TOKEN'
 api.info = { id = 123456, first_name = 'TestBot', username = 'test_bot', is_bot = true }
 api.info.name = api.info.first_name
 
--- Store request calls for assertions
-api._requests = {}
-local real_request = api.request
-api._real_request = real_request
+-- store request calls for assertions. guard against re-running test_helper
+-- after the mock has already been installed: busted may load the helper via
+-- the .busted config AND via `require('spec.test_helper')` in spec files,
+-- and a naive second pass would re-capture the mock itself as
+-- api._real_request, defeating any test that calls the real implementation.
+api._requests = api._requests or {}
+if not api._real_request then
+    api._real_request = api.request
+end
 api.request = function(endpoint, parameters, file)
     table.insert(api._requests, {
         endpoint = endpoint,
         parameters = parameters,
         file = file
     })
-    -- Return a mock success response
+    -- return a mock success response
     return { ok = true, result = true }, 200
 end
 
