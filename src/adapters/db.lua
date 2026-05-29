@@ -1,3 +1,5 @@
+--- database adapter supporting SQLite and PostgreSQL.
+-- @module telegram-bot-lua.adapters.db
 --[[
     Database adapter for telegram-bot-lua.
     Supports SQLite (via lsqlite3) and PostgreSQL (via pgmoon).
@@ -27,7 +29,16 @@
 return function(api)
     api.db = {}
 
-    -- Connection factory
+    --- create a database connection.
+    -- @param opts table connection options
+    -- @param opts.driver string database driver: 'sqlite' or 'postgres'
+    -- @param opts.path string SQLite database file path (sqlite only)
+    -- @param opts.host string PostgreSQL host (postgres only)
+    -- @param opts.port number PostgreSQL port (postgres only)
+    -- @param opts.database string PostgreSQL database name (postgres only)
+    -- @param opts.user string PostgreSQL username (postgres only)
+    -- @param opts.password string PostgreSQL password (postgres only)
+    -- @return table connection object with execute, query, close methods
     function api.db.connect(opts)
         assert(opts and opts.driver, 'db.connect requires a driver option (sqlite, postgres)')
         local driver = opts.driver:lower()

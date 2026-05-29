@@ -146,4 +146,44 @@ describe('module structure', function()
             assert.is_function(api.input_text_message_content)
         end)
     end)
+
+    -- regression coverage for issue #46: ssl.https.request can raise on
+    -- transient ssl/socket faults. api.request must wrap the call in pcall
+    -- so the caller always gets a (false, err) return rather than a
+    -- bot-killing lua error.
+    describe('api.request pcall guard', function()
+        local original_https_request
+
+        before_each(function()
+            local https = require('ssl.https')
+            original_https_request = https.request
+        end)
+
+        after_each(function()
+            local https = require('ssl.https')
+            https.request = original_https_request
+        end)
+
+        it('returns (false, err) when ssl.https.request raises', function()
+            local https = require('ssl.https')
+            https.request = function()
+                error("Copas 'try' error intermediate table: 'unexpected eof while reading'")
+            end
+            local ok, success, err = pcall(api._real_request, 'https://example.invalid/getMe', {})
+            assert.is_true(ok, 'api.request must not propagate the raised error')
+            assert.is_false(success)
+            assert.truthy(tostring(err):find('unexpected eof'))
+        end)
+
+        it('returns (false, err) on the wantread case too', function()
+            local https = require('ssl.https')
+            https.request = function()
+                error("Copas 'try' error intermediate table: 'wantread'")
+            end
+            local ok, success, err = pcall(api._real_request, 'https://example.invalid/getMe', {})
+            assert.is_true(ok)
+            assert.is_false(success)
+            assert.truthy(tostring(err):find('wantread'))
+        end)
+    end)
 end)

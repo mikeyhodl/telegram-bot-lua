@@ -1,7 +1,19 @@
+--- payments API methods.
+-- @module telegram-bot-lua.methods.payments
 return function(api)
     local json = require('dkjson')
     local config = require('telegram-bot-lua.config')
 
+    --- send an invoice to a chat.
+    -- @param chat_id string|number unique identifier for the target chat
+    -- @param title string product name
+    -- @param description string product description
+    -- @param payload string bot-defined invoice payload
+    -- @param currency string three-letter ISO 4217 currency code
+    -- @param prices string|table JSON-serialised array of LabeledPrice or a table thereof
+    -- @param opts table optional parameters (provider_token, max_tip_amount, suggested_tip_amounts, reply_markup, etc.)
+    -- @return table|false the sent message, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.send_invoice(chat_id, title, description, payload, currency, prices, opts)
         opts = opts or {}
         prices = type(prices) == 'table' and json.encode(prices) or prices
@@ -47,6 +59,15 @@ return function(api)
         return success, res
     end
 
+    --- create a link for an invoice.
+    -- @param title string product name
+    -- @param description string product description
+    -- @param payload string bot-defined invoice payload
+    -- @param currency string three-letter ISO 4217 currency code
+    -- @param prices string|table JSON-serialised array of LabeledPrice or a table thereof
+    -- @param opts table optional parameters (provider_token, max_tip_amount, suggested_tip_amounts, etc.)
+    -- @return table|false the created invoice link as a string, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.create_invoice_link(title, description, payload, currency, prices, opts)
         opts = opts or {}
         prices = type(prices) == 'table' and json.encode(prices) or prices
@@ -79,6 +100,12 @@ return function(api)
         return success, res
     end
 
+    --- reply to shipping queries with available shipping options or an error.
+    -- @param shipping_query_id string unique identifier for the query to be answered
+    -- @param ok boolean whether delivery to the specified address is possible
+    -- @param opts table optional parameters (shipping_options, error_message)
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.answer_shipping_query(shipping_query_id, ok, opts)
         opts = opts or {}
         local shipping_options = opts.shipping_options
@@ -96,6 +123,12 @@ return function(api)
         return success, res
     end
 
+    --- respond to a pre-checkout query confirming or rejecting the order.
+    -- @param pre_checkout_query_id string unique identifier for the query to be answered
+    -- @param ok boolean whether the bot is ready to proceed with the order
+    -- @param opts table optional parameters (error_message)
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.answer_pre_checkout_query(pre_checkout_query_id, ok, opts)
         opts = opts or {}
         local error_message = opts.error_message
@@ -110,6 +143,10 @@ return function(api)
         return success, res
     end
 
+    --- get the bot's telegram star transactions.
+    -- @param opts table optional parameters (offset, limit)
+    -- @return table|false the star transactions object, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.get_star_transactions(opts)
         opts = opts or {}
         local success, res = api.request(config.endpoint .. api.token .. '/getStarTransactions', {
@@ -119,6 +156,11 @@ return function(api)
         return success, res
     end
 
+    --- refund a successful payment in telegram stars.
+    -- @param user_id number identifier of the user whose payment will be refunded
+    -- @param telegram_payment_charge_id string telegram payment identifier
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.refund_star_payment(user_id, telegram_payment_charge_id)
         local success, res = api.request(config.endpoint .. api.token .. '/refundStarPayment', {
             ['user_id'] = user_id,
@@ -127,6 +169,12 @@ return function(api)
         return success, res
     end
 
+    --- edit a user's star subscription status (cancel or re-enable).
+    -- @param user_id number identifier of the user whose subscription will be edited
+    -- @param telegram_payment_charge_id string telegram payment identifier for the subscription
+    -- @param is_canceled boolean whether the subscription should be cancelled
+    -- @return table|false true on success, or false on failure
+    -- @return string|table the HTTP status or error details
     function api.edit_user_star_subscription(user_id, telegram_payment_charge_id, is_canceled)
         local success, res = api.request(config.endpoint .. api.token .. '/editUserStarSubscription', {
             ['user_id'] = user_id,

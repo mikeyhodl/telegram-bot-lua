@@ -1,3 +1,5 @@
+--- async polling and concurrency via copas.
+-- @module telegram-bot-lua.async
 --[[
     Async module for telegram-bot-lua.
     Provides coroutine-based concurrency via copas for non-blocking
@@ -34,8 +36,12 @@ return function(api)
     api.async = {}
     api.async._running = false
 
-    -- Non-blocking HTTP request using copas.
-    -- Has the same signature as api.request but uses copas.http.
+    --- non-blocking HTTP request using copas.
+    -- has the same signature as api.request but uses copas.http.
+    -- @param endpoint string the full API endpoint URL
+    -- @param parameters table optional request parameters
+    -- @param file table optional file upload map
+    -- @return table decoded JSON response, or false on error
     function api.async.request(endpoint, parameters, file)
         assert(endpoint, 'You must specify an endpoint to make this request to!')
         parameters = parameters or {}
@@ -68,7 +74,12 @@ return function(api)
         parameters = next(parameters) == nil and {''} or parameters
         local response = {}
         local body, boundary = multipart.encode(parameters)
-        local success, res = copas_http.request({
+        -- copas wraps socket ops in copas.try and raises on conditions like
+        -- 'wantread' or 'unexpected eof while reading' when the telegram
+        -- server closes the long-poll connection at the exact timeout
+        -- boundary. without pcall those errors escape the coroutine, kill
+        -- the polling thread, and crash the bot. cf. issue #46.
+        local pok, success, res = pcall(copas_http.request, {
             ['url'] = endpoint,
             ['method'] = 'POST',
             ['headers'] = {
@@ -78,6 +89,10 @@ return function(api)
             ['source'] = ltn12.source.string(body),
             ['sink'] = ltn12.sink.table(response)
         })
+        if not pok then
+            print('Connection error [' .. tostring(success) .. ']')
+            return false, success
+        end
         if not success then
             print('Connection error [' .. tostring(res) .. ']')
             return false, res
@@ -96,9 +111,10 @@ return function(api)
         return jdat, res
     end
 
-    -- Run the bot with concurrent update processing.
-    -- Each update is dispatched to its own coroutine so a slow handler
+    --- run the bot with concurrent update processing.
+    -- each update is dispatched to its own coroutine so a slow handler
     -- won't block processing of other updates.
+    -- @param opts table polling options (limit, timeout, offset, allowed_updates)
     function api.async.run(opts)
         opts = opts or {}
         local limit = tonumber(opts.limit) or 1
@@ -111,17 +127,31 @@ return function(api)
         api.request = api.async.request
         api.async._running = true
 
+        -- backoff state for transient polling failures: start at 1s, double
+        -- on each consecutive failure up to 30s, reset on the next success.
+        -- prevents a hot loop when telegram is unreachable or the long-poll
+        -- keeps eof'ing.
+        local backoff = 1
+        local max_backoff = 30
+
         copas.addthread(function()
             while api.async._running do
-                local updates = api.get_updates({
+                local pok, updates = pcall(api.get_updates, {
                     timeout = timeout,
                     offset = offset,
                     limit = limit,
                     allowed_updates = allowed_updates
                 })
-                if updates and type(updates) == 'table' and updates.result then
+                if not pok then
+                    if api.debug then
+                        print('Polling error [' .. tostring(updates) .. '], backing off ' .. backoff .. 's')
+                    end
+                    copas.sleep(backoff)
+                    backoff = math.min(backoff * 2, max_backoff)
+                elseif updates and type(updates) == 'table' and updates.result then
+                    backoff = 1
                     for _, v in pairs(updates.result) do
-                        -- Each update gets its own coroutine
+                        -- each update gets its own coroutine
                         copas.addthread(function()
                             local ok, err = pcall(api.process_update, v)
                             if not ok and api.debug then
@@ -130,6 +160,14 @@ return function(api)
                         end)
                         offset = v.update_id + 1
                     end
+                else
+                    -- get_updates returned false or a malformed payload. back
+                    -- off so a sustained server-side error doesn't pin a cpu.
+                    if api.debug then
+                        print('Polling returned no result, backing off ' .. backoff .. 's')
+                    end
+                    copas.sleep(backoff)
+                    backoff = math.min(backoff * 2, max_backoff)
                 end
             end
         end)
@@ -141,14 +179,15 @@ return function(api)
         api.async._running = false
     end
 
-    -- Stop the async run loop.
+    --- stop the async run loop.
     function api.async.stop()
         api.async._running = false
     end
 
-    -- Run multiple functions concurrently and collect results.
-    -- Each function runs in its own coroutine. Returns when all complete.
-    -- Results are returned in order: { {ok, result, ...}, {ok, result, ...} }
+    --- run multiple functions concurrently and collect results.
+    -- each function runs in its own coroutine. returns when all complete.
+    -- @param fns table array of functions to execute in parallel
+    -- @return table results in order: { {value, ...}, {false, error}, ... }
     function api.async.all(fns)
         if not fns or #fns == 0 then
             return {}
@@ -194,18 +233,21 @@ return function(api)
         return unwrapped
     end
 
-    -- Spawn a background coroutine within the copas event loop.
-    -- Returns the copas thread.
+    --- spawn a background coroutine within the copas event loop.
+    -- @param fn function the function to run in a new coroutine
+    -- @return thread the copas thread
     function api.async.spawn(fn)
         return copas.addthread(fn)
     end
 
-    -- Non-blocking sleep. Only works within a copas coroutine context.
+    --- non-blocking sleep (only works within a copas coroutine).
+    -- @param seconds number duration to sleep
     function api.async.sleep(seconds)
         copas.sleep(seconds)
     end
 
-    -- Check if we're currently inside the async event loop.
+    --- check if we're currently inside the async event loop.
+    -- @return boolean true if the async loop is active
     function api.async.is_running()
         return api.async._running
     end

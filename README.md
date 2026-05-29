@@ -2,7 +2,7 @@
 
 [![audited by auto-audit](https://img.shields.io/badge/audited_by-auto--audit-6366f1?logo=github&logoColor=white)](https://auto-audit.hesketh.pro)
 
-A feature-filled Telegram bot API library written in Lua, created by [Matt](https://t.me/wrxck). Supports Bot API 9.4 with full coverage of all available methods.
+A feature-filled Telegram bot API library written in Lua, created by [Matt](https://t.me/wrxck). Supports Bot API 9.6 with full coverage of all available methods.
 
 ## Installation
 
@@ -30,7 +30,7 @@ api.run({ timeout = 60 })
 
 ## Key Features
 
-- Full Bot API 9.4 coverage (messages, media, payments, stickers, forums, games, gifts, stories, and more)
+- Full Bot API 9.6 coverage (messages, media, payments, stickers, forums, games, gifts, stories, and more)
 - **Async-first architecture** via copas: concurrent updates, parallel API calls, background tasks
 - **Built-in adapters**: SQLite, PostgreSQL, Redis, OpenAI, Anthropic (Claude), and SMTP email
 - **Lua 5.1 - 5.5 support** with automatic polyfills for bitwise operations and string.pack

@@ -1,3 +1,5 @@
+--- adapter registry for database, Redis, LLM, and email adapters.
+-- @module telegram-bot-lua.adapters
 --[[
     Adapter registry for telegram-bot-lua.
     Provides a unified interface for database, Redis, LLM, and email adapters.
@@ -8,7 +10,8 @@
 return function(api)
     api.adapters = {}
 
-    -- Utility: check if we're inside a copas async context
+    --- check if we're inside a copas async context.
+    -- @return boolean true if running inside copas
     function api.adapters.is_async()
         local ok, copas = pcall(require, 'copas')
         if not ok then return false end
@@ -18,7 +21,11 @@ return function(api)
         return copas.running == true
     end
 
-    -- Utility: perform an HTTP request that auto-selects sync/async
+    --- perform an HTTP request that auto-selects sync or async transport.
+    -- @param url string the request URL
+    -- @param opts table optional request options (method, headers, body)
+    -- @return string response body, or nil on error
+    -- @return number HTTP status code or error message
     function api.adapters.http_request(url, opts)
         opts = opts or {}
         local method = opts.method or 'GET'
@@ -66,7 +73,8 @@ return function(api)
         end
     end
 
-    -- Utility: create a TCP socket that auto-selects sync/async
+    --- create a TCP socket that auto-selects sync or async mode.
+    -- @return userdata a TCP socket, wrapped with copas if in async context
     function api.adapters.create_socket()
         local socket = require('socket')
         local sock = socket.tcp()

@@ -111,8 +111,182 @@ describe('handlers', function()
             api.on_purchased_paid_media = function(_) end
         end)
 
+        it('routes managed_bot update', function()
+            local called = false
+            api.on_managed_bot = function(_) called = true end
+            api.process_update({ managed_bot = { user = {}, bot = {} } })
+            assert.is_true(called)
+            api.on_managed_bot = function(_) end
+        end)
+
         it('returns false for unknown update type', function()
             assert.is_false(api.process_update({ unknown_type = {} }))
+        end)
+    end)
+
+    -- regression coverage for issue #46: sync polling crashed when the
+    -- underlying http transport raised a lua error (luasocket/luasec
+    -- 'wantread' or 'unexpected eof while reading'). _run_sync now wraps
+    -- get_updates in pcall, applies exponential backoff, and exits cleanly
+    -- on api.stop_sync().
+    describe('_run_sync', function()
+        local original_get_updates
+        local original_on_message
+        local sleeps
+
+        before_each(function()
+            original_get_updates = api.get_updates
+            original_on_message = api.on_message
+            sleeps = {}
+        end)
+
+        after_each(function()
+            api.get_updates = original_get_updates
+            api.on_message = original_on_message
+            api._sync_running = false
+        end)
+
+        local function record_sleeper(seconds)
+            table.insert(sleeps, seconds)
+        end
+
+        it('exits cleanly when stop_sync is called', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                api.stop_sync()
+                return { ok = true, result = {} }, 200
+            end
+            api._run_sync({ _sleeper = record_sleeper })
+            assert.equals(1, calls)
+        end)
+
+        it('survives a thrown lua error from get_updates', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                api.stop_sync()
+                return { ok = true, result = {} }, 200
+            end
+            assert.has_no_error(function()
+                api._run_sync({ _sleeper = record_sleeper })
+            end)
+            assert.equals(2, calls)
+            assert.equals(1, #sleeps)
+            assert.equals(1, sleeps[1])
+        end)
+
+        it('survives unexpected eof and resumes processing updates', function()
+            local handled = {}
+            api.on_message = function(message)
+                table.insert(handled, message.text)
+            end
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 then
+                    error("Copas 'try' error intermediate table: 'unexpected eof while reading'")
+                end
+                api.stop_sync()
+                return { ok = true, result = {
+                    { update_id = 1, message = { chat = { type = 'private' }, text = 'recovered' }},
+                }}, 200
+            end
+            api._run_sync({ _sleeper = record_sleeper })
+            assert.equals(1, #handled)
+            assert.equals('recovered', handled[1])
+        end)
+
+        it('survives get_updates returning false (network/api error)', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls < 3 then
+                    return false, 'connection refused'
+                end
+                api.stop_sync()
+                return { ok = true, result = {} }, 200
+            end
+            assert.has_no_error(function()
+                api._run_sync({ _sleeper = record_sleeper })
+            end)
+            assert.equals(3, calls)
+            assert.equals(2, #sleeps)
+        end)
+
+        it('applies exponential backoff and caps at 30s', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls > 8 then
+                    api.stop_sync()
+                    return { ok = true, result = {} }, 200
+                end
+                error("Copas 'try' error intermediate table: 'wantread'")
+            end
+            api._run_sync({ _sleeper = record_sleeper })
+            -- 8 errors -> 8 sleeps: 1, 2, 4, 8, 16, 30, 30, 30
+            assert.equals(8, #sleeps)
+            assert.equals(1, sleeps[1])
+            assert.equals(2, sleeps[2])
+            assert.equals(4, sleeps[3])
+            assert.equals(8, sleeps[4])
+            assert.equals(16, sleeps[5])
+            assert.equals(30, sleeps[6])
+            assert.equals(30, sleeps[7])
+            assert.equals(30, sleeps[8])
+        end)
+
+        it('resets backoff after a successful poll', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 or calls == 2 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                if calls == 3 then
+                    return { ok = true, result = {} }, 200
+                end
+                if calls == 4 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                api.stop_sync()
+                return { ok = true, result = {} }, 200
+            end
+            api._run_sync({ _sleeper = record_sleeper })
+            -- expected sleep sequence: 1 (err), 2 (err), <success: reset>, 1 (err)
+            assert.equals(3, #sleeps)
+            assert.equals(1, sleeps[1])
+            assert.equals(2, sleeps[2])
+            assert.equals(1, sleeps[3])
+        end)
+
+        it('processes updates and advances offset on success', function()
+            local handled = {}
+            api.on_message = function(message)
+                table.insert(handled, message.text)
+            end
+            local seen_offsets = {}
+            local calls = 0
+            api.get_updates = function(opts)
+                calls = calls + 1
+                table.insert(seen_offsets, opts.offset)
+                if calls == 1 then
+                    return { ok = true, result = {
+                        { update_id = 10, message = { chat = { type = 'private' }, text = 'a' }},
+                        { update_id = 11, message = { chat = { type = 'private' }, text = 'b' }},
+                    }}, 200
+                end
+                api.stop_sync()
+                return { ok = true, result = {} }, 200
+            end
+            api._run_sync({ _sleeper = record_sleeper })
+            assert.same({ 'a', 'b' }, handled)
+            assert.equals(0, seen_offsets[1])
+            assert.equals(12, seen_offsets[2])
         end)
     end)
 end)

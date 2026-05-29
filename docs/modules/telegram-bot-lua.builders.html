@@ -1,0 +1,953 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>telegram-bot-lua API Documentation</title>
+    <link rel="stylesheet" href="../ldoc_pale.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>telegram-bot-lua</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/b64url.html">b64url</a></li>
+  <li><a href="../modules/telegram-bot-lua.html">telegram-bot-lua</a></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.html">telegram-bot-lua.adapters</a></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.db.html">telegram-bot-lua.adapters.db</a></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.email.html">telegram-bot-lua.adapters.email</a></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.llm.html">telegram-bot-lua.adapters.llm</a></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
+  <li><a href="../modules/telegram-bot-lua.async.html">telegram-bot-lua.async</a></li>
+  <li><strong>telegram-bot-lua.builders</strong></li>
+  <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
+  <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.chat.html">telegram-bot-lua.methods.chat</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.games.html">telegram-bot-lua.methods.games</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.gifts.html">telegram-bot-lua.methods.gifts</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.inline.html">telegram-bot-lua.methods.inline</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.members.html">telegram-bot-lua.methods.members</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.messages.html">telegram-bot-lua.methods.messages</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.passport.html">telegram-bot-lua.methods.passport</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.payments.html">telegram-bot-lua.methods.payments</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.stickers.html">telegram-bot-lua.methods.stickers</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.stories.html">telegram-bot-lua.methods.stories</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.suggested_posts.html">telegram-bot-lua.methods.suggested_posts</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
+  <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
+  <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/tools.html">tools</a></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/README.md.html">telegram-bot-lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>telegram-bot-lua.builders</code></h1>
+<p>keyboard and inline markup builders.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#api.callback_data_button">api.callback_data_button(text, callback_data, encoded)</a></td>
+	<td class="summary">create a standalone callback data inline keyboard button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.callback_game_button">api.callback_game_button(text, callback_game, encoded)</a></td>
+	<td class="summary">create a standalone callback game inline keyboard button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.inline_keyboard">api.inline_keyboard()</a></td>
+	<td class="summary">create an inline keyboard markup with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.inline_keyboard_meta:row">api.inline_keyboard_meta:row(row)</a></td>
+	<td class="summary">add a row of buttons to the inline keyboard.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_media_photo">api.input_media_photo(media, caption, parse_mode)</a></td>
+	<td class="summary">create an input media photo object for use with sendMediaGroup and editMessageMedia.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_media_video">api.input_media_video(media, thumbnail, caption, parse_mode, width, height, duration, supports_streaming)</a></td>
+	<td class="summary">create an input media video object for use with sendMediaGroup and editMessageMedia.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard">api.keyboard(resize_keyboard, one_time_keyboard, selective)</a></td>
+	<td class="summary">create a reply keyboard markup with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_meta:row">api.keyboard_meta:row(row)</a></td>
+	<td class="summary">add a row of buttons to the reply keyboard.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.labeled_price">api.labeled_price(label, amount, encoded)</a></td>
+	<td class="summary">create a standalone labelled price object for payment invoices.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.mask_position">api.mask_position()</a></td>
+	<td class="summary">create a mask position array with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.mask_position_meta:position">api.mask_position_meta:position(point, x_shift, y_shift, scale)</a></td>
+	<td class="summary">add a mask position entry specifying where a mask should be placed on a face.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.pay_button">api.pay_button(text, pay, encoded)</a></td>
+	<td class="summary">create a standalone pay inline keyboard button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.prices">api.prices()</a></td>
+	<td class="summary">create a prices array with a chainable builder pattern for payment invoices.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.prices_meta:labeled_price">api.prices_meta:labeled_price(label, amount)</a></td>
+	<td class="summary">add a labelled price to the prices array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.remove_keyboard">api.remove_keyboard(selective)</a></td>
+	<td class="summary">create a remove keyboard markup to request removal of the custom keyboard.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row">api.row(_)</a></td>
+	<td class="summary">create a row of inline keyboard buttons with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row_meta:callback_data_button">api.row_meta:callback_data_button(text, callback_data)</a></td>
+	<td class="summary">add a callback data button to the row.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row_meta:pay_button">api.row_meta:pay_button(text, pay)</a></td>
+	<td class="summary">add a pay button to the row.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row_meta:switch_inline_query_button">api.row_meta:switch_inline_query_button(text, switch_inline_query)</a></td>
+	<td class="summary">add a switch inline query button to the row.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row_meta:switch_inline_query_current_chat_button">api.row_meta:switch_inline_query_current_chat_button(text, switch_inline_query_current_chat)</a></td>
+	<td class="summary">add a switch inline query current chat button to the row.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.row_meta:url_button">api.row_meta:url_button(text, url)</a></td>
+	<td class="summary">add a url button to the row.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.shipping_options">api.shipping_options()</a></td>
+	<td class="summary">create a shipping options array with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.shipping_options_meta:shipping_option">api.shipping_options_meta:shipping_option(id, title, prices)</a></td>
+	<td class="summary">add a shipping option to the shipping options array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.switch_inline_query_button">api.switch_inline_query_button(text, switch_inline_query, encoded)</a></td>
+	<td class="summary">create a standalone switch inline query button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.switch_inline_query_current_chat_button">api.switch_inline_query_current_chat_button(text, switch_inline_query_current_chat, encoded)</a></td>
+	<td class="summary">create a standalone switch inline query current chat button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.url_button">api.url_button(text, url, encoded)</a></td>
+	<td class="summary">create a standalone url inline keyboard button.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "api.callback_data_button"></a>
+    <strong>api.callback_data_button(text, callback_data, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone callback data inline keyboard button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">callback_data</span>
+         string data to be sent in a callback query when pressed
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.callback_game_button"></a>
+    <strong>api.callback_game_button(text, callback_game, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone callback game inline keyboard button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">callback_game</span>
+         string description of the game to be launched
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.inline_keyboard"></a>
+    <strong>api.inline_keyboard()</strong>
+    </dt>
+    <dd>
+    create an inline keyboard markup with a chainable builder pattern.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table an inline keyboard markup object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.inline_keyboard_meta:row"></a>
+    <strong>api.inline_keyboard_meta:row(row)</strong>
+    </dt>
+    <dd>
+    add a row of buttons to the inline keyboard.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">row</span>
+         table a row of inline keyboard button objects
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_photo"></a>
+    <strong>api.input_media_photo(media, caption, parse_mode)</strong>
+    </dt>
+    <dd>
+    create an input media photo object for use with sendMediaGroup and editMessageMedia.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id, url, or file path for the photo
+        </li>
+        <li><span class="parameter">caption</span>
+         string optional caption for the photo
+        </li>
+        <li><span class="parameter">parse_mode</span>
+         string optional parse mode for the caption ("MarkdownV2", "HTML", etc.)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_video"></a>
+    <strong>api.input_media_video(media, thumbnail, caption, parse_mode, width, height, duration, supports_streaming)</strong>
+    </dt>
+    <dd>
+    create an input media video object for use with sendMediaGroup and editMessageMedia.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id, url, or file path for the video
+        </li>
+        <li><span class="parameter">thumbnail</span>
+         string optional thumbnail file_id or file path
+        </li>
+        <li><span class="parameter">caption</span>
+         string optional caption for the video
+        </li>
+        <li><span class="parameter">parse_mode</span>
+         string optional parse mode for the caption
+        </li>
+        <li><span class="parameter">width</span>
+         number optional video width
+        </li>
+        <li><span class="parameter">height</span>
+         number optional video height
+        </li>
+        <li><span class="parameter">duration</span>
+         number optional video duration in seconds
+        </li>
+        <li><span class="parameter">supports_streaming</span>
+         boolean optional whether the video is suitable for streaming
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard"></a>
+    <strong>api.keyboard(resize_keyboard, one_time_keyboard, selective)</strong>
+    </dt>
+    <dd>
+    create a reply keyboard markup with a chainable builder pattern.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">resize_keyboard</span>
+         boolean optional request to resize the keyboard vertically
+        </li>
+        <li><span class="parameter">one_time_keyboard</span>
+         boolean optional request to hide the keyboard after use
+        </li>
+        <li><span class="parameter">selective</span>
+         boolean optional show keyboard to specific users only
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a reply keyboard markup object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_meta:row"></a>
+    <strong>api.keyboard_meta:row(row)</strong>
+    </dt>
+    <dd>
+    add a row of buttons to the reply keyboard.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">row</span>
+         table a row of keyboard button objects
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.labeled_price"></a>
+    <strong>api.labeled_price(label, amount, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone labelled price object for payment invoices.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">label</span>
+         string price label, e.g. "product price"
+        </li>
+        <li><span class="parameter">amount</span>
+         number price in the smallest units of the currency
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the labelled price object, json string if encoded, or false on invalid params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.mask_position"></a>
+    <strong>api.mask_position()</strong>
+    </dt>
+    <dd>
+    create a mask position array with a chainable builder pattern.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a mask position array object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.mask_position_meta:position"></a>
+    <strong>api.mask_position_meta:position(point, x_shift, y_shift, scale)</strong>
+    </dt>
+    <dd>
+    add a mask position entry specifying where a mask should be placed on a face.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">point</span>
+         string the part of the face to place the mask on ("forehead", "eyes", "mouth", or "chin")
+        </li>
+        <li><span class="parameter">x_shift</span>
+         number shift by x-axis measured in widths of the mask
+        </li>
+        <li><span class="parameter">y_shift</span>
+         number shift by y-axis measured in heights of the mask
+        </li>
+        <li><span class="parameter">scale</span>
+         number mask scaling coefficient
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.pay_button"></a>
+    <strong>api.pay_button(text, pay, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone pay inline keyboard button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">pay</span>
+         boolean whether this is a pay button
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.prices"></a>
+    <strong>api.prices()</strong>
+    </dt>
+    <dd>
+    create a prices array with a chainable builder pattern for payment invoices.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a prices array object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.prices_meta:labeled_price"></a>
+    <strong>api.prices_meta:labeled_price(label, amount)</strong>
+    </dt>
+    <dd>
+    add a labelled price to the prices array.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">label</span>
+         string price label, e.g. "product price"
+        </li>
+        <li><span class="parameter">amount</span>
+         number price in the smallest units of the currency
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.remove_keyboard"></a>
+    <strong>api.remove_keyboard(selective)</strong>
+    </dt>
+    <dd>
+    create a remove keyboard markup to request removal of the custom keyboard.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">selective</span>
+         boolean optional remove keyboard for specific users only
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a ReplyKeyboardRemove object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row"></a>
+    <strong>api.row(_)</strong>
+    </dt>
+    <dd>
+    create a row of inline keyboard buttons with a chainable builder pattern.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a row object with metatable for chaining button additions
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row_meta:callback_data_button"></a>
+    <strong>api.row_meta:callback_data_button(text, callback_data)</strong>
+    </dt>
+    <dd>
+    add a callback data button to the row.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">callback_data</span>
+         string data to be sent in a callback query when the button is pressed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row_meta:pay_button"></a>
+    <strong>api.row_meta:pay_button(text, pay)</strong>
+    </dt>
+    <dd>
+    add a pay button to the row.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">pay</span>
+         boolean whether this is a pay button
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row_meta:switch_inline_query_button"></a>
+    <strong>api.row_meta:switch_inline_query_button(text, switch_inline_query)</strong>
+    </dt>
+    <dd>
+    add a switch inline query button to the row.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">switch_inline_query</span>
+         string query to insert into the chat input when switching to inline mode
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row_meta:switch_inline_query_current_chat_button"></a>
+    <strong>api.row_meta:switch_inline_query_current_chat_button(text, switch_inline_query_current_chat)</strong>
+    </dt>
+    <dd>
+    add a switch inline query current chat button to the row.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">switch_inline_query_current_chat</span>
+         string query to insert into the current chat input for inline mode
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.row_meta:url_button"></a>
+    <strong>api.row_meta:url_button(text, url)</strong>
+    </dt>
+    <dd>
+    add a url button to the row.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">url</span>
+         string http or tg:// url to open when the button is pressed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.shipping_options"></a>
+    <strong>api.shipping_options()</strong>
+    </dt>
+    <dd>
+    create a shipping options array with a chainable builder pattern.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a shipping options array object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.shipping_options_meta:shipping_option"></a>
+    <strong>api.shipping_options_meta:shipping_option(id, title, prices)</strong>
+    </dt>
+    <dd>
+    add a shipping option to the shipping options array.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+         string unique identifier for the shipping option
+        </li>
+        <li><span class="parameter">title</span>
+         string display name for the shipping option
+        </li>
+        <li><span class="parameter">prices</span>
+         table array of labelled price objects for this option
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.switch_inline_query_button"></a>
+    <strong>api.switch_inline_query_button(text, switch_inline_query, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone switch inline query button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">switch_inline_query</span>
+         string query to insert when switching to inline mode in another chat
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.switch_inline_query_current_chat_button"></a>
+    <strong>api.switch_inline_query_current_chat_button(text, switch_inline_query_current_chat, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone switch inline query current chat button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">switch_inline_query_current_chat</span>
+         string query to insert into the current chat for inline mode
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.url_button"></a>
+    <strong>api.url_button(text, url, encoded)</strong>
+    </dt>
+    <dd>
+    create a standalone url inline keyboard button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">url</span>
+         string http or tg:// url to open when the button is pressed
+        </li>
+        <li><span class="parameter">encoded</span>
+         boolean optional json-encode the result
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|string|boolean the button object, json string if encoded, or false on missing params
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2026-04-07 21:37:15 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

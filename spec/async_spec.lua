@@ -312,6 +312,148 @@ describe('async', function()
         end)
     end)
 
+    -- regression coverage for issue #46. copas can raise a lua error when
+    -- the long-poll connection hits 'wantread' or 'unexpected eof while
+    -- reading' (the telegram server closing the keep-alive at the exact
+    -- timeout boundary). pre-fix this killed the async polling thread.
+    describe('error recovery (issue #46)', function()
+        local original_get_updates
+        local original_copas_sleep
+        local sleeps
+
+        before_each(function()
+            original_get_updates = api.get_updates
+            original_copas_sleep = copas.sleep
+            sleeps = {}
+            -- replace copas.sleep so backoff tests don't wait real seconds
+            copas.sleep = function(s) table.insert(sleeps, s) end
+        end)
+
+        after_each(function()
+            api.get_updates = original_get_updates
+            copas.sleep = original_copas_sleep
+        end)
+
+        it('async.request returns (false, err) when copas raises', function()
+            local original_request = api.async.request
+            -- inject a copas-shaped failure via the lower-level path. the
+            -- test asserts pcall-wrapping inside async.request itself by
+            -- using monkey-patched copas.http via package.loaded swap.
+            local copas_http = require('copas.http')
+            local original_http_request = copas_http.request
+            copas_http.request = function()
+                error("Copas 'try' error intermediate table: 'wantread'")
+            end
+            local ok, success, err = pcall(api.async.request, 'https://example.invalid/getUpdates', {})
+            assert.is_true(ok)
+            assert.is_false(success)
+            assert.truthy(tostring(err):find('wantread'))
+            copas_http.request = original_http_request
+            api.async.request = original_request
+        end)
+
+        it('async.run survives a thrown lua error from get_updates', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                api.async.stop()
+                return { ok = true, result = {} }, 200
+            end
+            assert.has_no_error(function()
+                api.async.run({ timeout = 0 })
+            end)
+            assert.equals(2, calls)
+            assert.equals(1, #sleeps)
+            assert.equals(1, sleeps[1])
+        end)
+
+        it('async.run survives unexpected eof and resumes update handling', function()
+            local handled = {}
+            local original_on_message = api.on_message
+            api.on_message = function(message) table.insert(handled, message.text) end
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 then
+                    error("Copas 'try' error intermediate table: 'unexpected eof while reading'")
+                end
+                api.async.stop()
+                return { ok = true, result = {
+                    { update_id = 5, message = { chat = { type = 'private' }, text = 'after eof' }},
+                }}, 200
+            end
+            api.async.run({ timeout = 0 })
+            assert.equals(1, #handled)
+            assert.equals('after eof', handled[1])
+            api.on_message = original_on_message
+        end)
+
+        it('async.run survives get_updates returning false', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls < 3 then
+                    return false, 'connection refused'
+                end
+                api.async.stop()
+                return { ok = true, result = {} }, 200
+            end
+            assert.has_no_error(function()
+                api.async.run({ timeout = 0 })
+            end)
+            assert.equals(3, calls)
+            assert.equals(2, #sleeps)
+        end)
+
+        it('async.run applies exponential backoff capped at 30s', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls > 8 then
+                    api.async.stop()
+                    return { ok = true, result = {} }, 200
+                end
+                error("Copas 'try' error intermediate table: 'wantread'")
+            end
+            api.async.run({ timeout = 0 })
+            assert.equals(8, #sleeps)
+            assert.equals(1, sleeps[1])
+            assert.equals(2, sleeps[2])
+            assert.equals(4, sleeps[3])
+            assert.equals(8, sleeps[4])
+            assert.equals(16, sleeps[5])
+            assert.equals(30, sleeps[6])
+            assert.equals(30, sleeps[7])
+            assert.equals(30, sleeps[8])
+        end)
+
+        it('async.run resets backoff after a successful poll', function()
+            local calls = 0
+            api.get_updates = function()
+                calls = calls + 1
+                if calls == 1 or calls == 2 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                if calls == 3 then
+                    return { ok = true, result = {} }, 200
+                end
+                if calls == 4 then
+                    error("Copas 'try' error intermediate table: 'wantread'")
+                end
+                api.async.stop()
+                return { ok = true, result = {} }, 200
+            end
+            api.async.run({ timeout = 0 })
+            assert.equals(3, #sleeps)
+            assert.equals(1, sleeps[1])
+            assert.equals(2, sleeps[2])
+            assert.equals(1, sleeps[3])
+        end)
+    end)
+
     describe('concurrent API calls within handler', function()
         it('all works inside a copas context', function()
             local results

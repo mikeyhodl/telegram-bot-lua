@@ -363,7 +363,49 @@ describe('methods', function()
             assert.equals('italic', decoded[1].type)
         end)
 
-        -- Other send methods
+        it('send_poll passes v9.6 parameters', function()
+            api.send_poll(123, 'Q?', {
+                { text = 'A' }, { text = 'B' }
+            }, {
+                correct_option_ids = {0, 1},
+                allows_revoting = true,
+                shuffle_options = true,
+                allow_adding_options = true,
+                hide_results_until_closes = true,
+                description = 'Poll description',
+                description_parse_mode = 'HTML'
+            })
+            local req = api._last_request()
+            local decoded_ids = json.decode(req.parameters.correct_option_ids)
+            assert.equals(0, decoded_ids[1])
+            assert.equals(1, decoded_ids[2])
+            assert.is_true(req.parameters.allows_revoting)
+            assert.is_true(req.parameters.shuffle_options)
+            assert.is_true(req.parameters.allow_adding_options)
+            assert.is_true(req.parameters.hide_results_until_closes)
+            assert.equals('Poll description', req.parameters.description)
+            assert.equals('HTML', req.parameters.description_parse_mode)
+        end)
+
+        it('send_poll JSON-encodes description_entities', function()
+            local entities = {{ type = 'bold', offset = 0, length = 4 }}
+            api.send_poll(123, 'Q?', {
+                { text = 'A' }, { text = 'B' }
+            }, { description_entities = entities })
+            local req = api._last_request()
+            local decoded = json.decode(req.parameters.description_entities)
+            assert.equals('bold', decoded[1].type)
+        end)
+
+        it('send_poll backward compat correct_option_id still works', function()
+            api.send_poll(123, 'Q?', {
+                { text = 'A' }, { text = 'B' }
+            }, { correct_option_id = 0 })
+            local req = api._last_request()
+            assert.equals(0, req.parameters.correct_option_id)
+        end)
+
+        -- other send methods
 
         it('send_dice works', function()
             api.send_dice(123, { emoji = '🎲' })
@@ -564,6 +606,38 @@ describe('methods', function()
             local req = api._last_request()
             assert.is_true(req.parameters.can_manage_direct_messages)
         end)
+
+        it('promote_chat_member includes can_manage_tags', function()
+            api.promote_chat_member(123, 456, { can_manage_tags = true })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/promoteChatMember'))
+            assert.is_true(req.parameters.can_manage_tags)
+        end)
+
+        it('set_chat_member_tag works', function()
+            api.set_chat_member_tag(123, 456, { tag = 'VIP' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/setChatMemberTag'))
+            assert.equals(123, req.parameters.chat_id)
+            assert.equals(456, req.parameters.user_id)
+            assert.equals('VIP', req.parameters.tag)
+        end)
+
+        it('set_chat_member_tag clears tag when no tag provided', function()
+            api.set_chat_member_tag(123, 456)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/setChatMemberTag'))
+            assert.is_nil(req.parameters.tag)
+        end)
+
+        it('get_user_profile_audios works', function()
+            api.get_user_profile_audios(456, { offset = 0, limit = 10 })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/getUserProfileAudios'))
+            assert.equals(456, req.parameters.user_id)
+            assert.equals(0, req.parameters.offset)
+            assert.equals(10, req.parameters.limit)
+        end)
     end)
 
     describe('stickers', function()
@@ -627,6 +701,27 @@ describe('methods', function()
             })
             local req = api._last_request()
             assert.truthy(req.endpoint:find('/setMyCommands'))
+        end)
+
+        it('get_managed_bot_token works', function()
+            api.get_managed_bot_token(789)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/getManagedBotToken'))
+            assert.equals(789, req.parameters.user_id)
+        end)
+
+        it('replace_managed_bot_token works', function()
+            api.replace_managed_bot_token(789)
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/replaceManagedBotToken'))
+            assert.equals(789, req.parameters.user_id)
+        end)
+
+        it('save_prepared_keyboard_button works', function()
+            api.save_prepared_keyboard_button(789, { type = 'test' })
+            local req = api._last_request()
+            assert.truthy(req.endpoint:find('/savePreparedKeyboardButton'))
+            assert.equals(789, req.parameters.user_id)
         end)
     end)
 
