@@ -205,5 +205,52 @@ describe('db adapter', function()
             assert.is_true(db2:is_connected())
             db2:close()
         end)
+
+        describe('prepared statement cache', function()
+            it('caches compiled statements keyed by sql', function()
+                db:execute('CREATE TABLE cache_t (id INTEGER PRIMARY KEY, name TEXT)')
+                -- repeated identical sql should reuse the same compiled statement
+                db:execute('INSERT INTO cache_t VALUES (?, ?)', {1, 'a'})
+                local first_stmt = db._stmt_cache['INSERT INTO cache_t VALUES (?, ?)']
+                assert.is_truthy(first_stmt)
+                db:execute('INSERT INTO cache_t VALUES (?, ?)', {2, 'b'})
+                local second_stmt = db._stmt_cache['INSERT INTO cache_t VALUES (?, ?)']
+                assert.equals(first_stmt, second_stmt)
+            end)
+
+            it('returns correct results across repeated reuse', function()
+                db:execute('CREATE TABLE reuse_t (id INTEGER PRIMARY KEY, val TEXT)')
+                for i = 1, 5 do
+                    db:execute('INSERT INTO reuse_t VALUES (?, ?)', {i, 'v' .. i})
+                end
+                -- the same query string is reused with different parameters; each
+                -- call must reflect the bound parameter, not a stale binding.
+                for i = 1, 5 do
+                    local rows = db:query('SELECT val FROM reuse_t WHERE id = ?', {i})
+                    assert.equals(1, #rows)
+                    assert.equals('v' .. i, rows[1].val)
+                end
+            end)
+
+            it('reuses a query statement and stays correct after a write', function()
+                db:execute('CREATE TABLE mix_t (id INTEGER PRIMARY KEY, val TEXT)')
+                db:execute('INSERT INTO mix_t VALUES (1, "old")')
+                local r1 = db:query('SELECT val FROM mix_t WHERE id = ?', {1})
+                assert.equals('old', r1[1].val)
+                db:execute('UPDATE mix_t SET val = ? WHERE id = ?', {'new', 1})
+                -- same cached SELECT statement, must observe the updated row
+                local r2 = db:query('SELECT val FROM mix_t WHERE id = ?', {1})
+                assert.equals('new', r2[1].val)
+            end)
+
+            it('clears the cache on close', function()
+                db:execute('CREATE TABLE close_t (id INTEGER)')
+                db:execute('INSERT INTO close_t VALUES (?)', {1})
+                assert.truthy(next(db._stmt_cache))
+                db:close()
+                assert.is_nil(next(db._stmt_cache))
+                db = nil -- prevent after_each from double-closing
+            end)
+        end)
     end)
 end)

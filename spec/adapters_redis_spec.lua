@@ -37,6 +37,173 @@ describe('redis adapter', function()
                 api.redis.connect({ host = '127.0.0.1', port = 49999, timeout = 1 })
             end)
         end)
+
+        it('exposes scan, scan_all and command methods', function()
+            -- inspect the method surface without a live server by stubbing
+            -- socket.tcp so connect() succeeds against a fake socket.
+            local socket = require('socket')
+            local real_tcp = socket.tcp
+            socket.tcp = function()
+                return {
+                    settimeout = function() end,
+                    connect = function() return 1 end,
+                    send = function() return 1 end,
+                    receive = function() return '+OK' end,
+                    close = function() end,
+                }
+            end
+            local conn = api.redis.connect({ host = '127.0.0.1', port = 6379 })
+            socket.tcp = real_tcp
+            assert.is_function(conn.scan)
+            assert.is_function(conn.scan_all)
+            assert.is_function(conn.command)
+        end)
+    end)
+
+    -- unit-level tests that drive the redis client over a scripted fake socket.
+    -- this lets us exercise SCAN iteration and the reconnect path without a
+    -- live (and, here, password-protected) redis server.
+    describe('unit (fake socket)', function()
+        local socket = require('socket')
+        local real_tcp
+
+        -- build a fake tcp socket whose receive() replays from a queue of
+        -- pre-encoded RESP lines/chunks. send() records the wire bytes. the
+        -- behaviour is overridable per-instance to simulate a dead socket.
+        local function make_fake_socket(script)
+            local fake = {
+                sent = {},
+                _queue = {},
+                _pos = 0,
+                closed = false,
+            }
+            function fake:settimeout() end
+            function fake:connect() return 1 end
+            function fake:send(data)
+                if self._fail_send then
+                    return nil, 'closed'
+                end
+                self.sent[#self.sent + 1] = data
+                return #data
+            end
+            function fake:receive(pattern)
+                if self._fail_recv then
+                    return nil, 'closed'
+                end
+                self._pos = self._pos + 1
+                local item = self._queue[self._pos]
+                if item == nil then
+                    return nil, 'closed'
+                end
+                if type(item) == 'table' and item.bytes then
+                    return item.bytes
+                end
+                return item
+            end
+            function fake:close() self.closed = true end
+            function fake:enqueue(...)
+                for _, v in ipairs({...}) do
+                    self._queue[#self._queue + 1] = v
+                end
+            end
+            if script then script(fake) end
+            return fake
+        end
+
+        -- install a fake socket factory so api.redis.connect picks it up.
+        local function with_fake(factory, fn)
+            real_tcp = socket.tcp
+            socket.tcp = factory
+            local ok, err = pcall(fn)
+            socket.tcp = real_tcp
+            if not ok then error(err) end
+        end
+
+        it('scan parses cursor and key batch from a SCAN reply', function()
+            local fake
+            with_fake(function()
+                fake = make_fake_socket()
+                return fake
+            end, function()
+                local conn = api.redis.connect({ host = '127.0.0.1', port = 6379 })
+                -- SCAN 0 -> next cursor "12", two keys
+                fake:enqueue('*2', '$2', { bytes = '12\r\n' }, '*2',
+                    '$2', { bytes = 'k1\r\n' }, '$2', { bytes = 'k2\r\n' })
+                local cursor, keys = conn:scan('0')
+                assert.equals('12', cursor)
+                assert.equals(2, #keys)
+                assert.equals('k1', keys[1])
+                assert.equals('k2', keys[2])
+                -- the MATCH/COUNT-free SCAN was written to the wire
+                assert.truthy(table.concat(fake.sent):find('SCAN'))
+            end)
+        end)
+
+        it('scan_all iterates until the cursor returns to 0', function()
+            local fake
+            with_fake(function()
+                fake = make_fake_socket()
+                return fake
+            end, function()
+                local conn = api.redis.connect({ host = '127.0.0.1', port = 6379 })
+                -- first page: cursor "5" with key a; second page: cursor "0" with key b
+                fake:enqueue(
+                    '*2', '$1', { bytes = '5\r\n' }, '*1', '$1', { bytes = 'a\r\n' },
+                    '*2', '$1', { bytes = '0\r\n' }, '*1', '$1', { bytes = 'b\r\n' })
+                local keys = conn:scan_all('*')
+                assert.equals(2, #keys)
+                assert.equals('a', keys[1])
+                assert.equals('b', keys[2])
+            end)
+        end)
+
+        it('reconnects once and retries the command on a dead socket', function()
+            local sockets = {}
+            local make_count = 0
+            with_fake(function()
+                make_count = make_count + 1
+                local f = make_fake_socket()
+                sockets[make_count] = f
+                -- the second socket (created during reconnect) is primed to
+                -- answer the retried GET 'k' with the bulk string "value".
+                if make_count == 2 then
+                    f:enqueue('$5', { bytes = 'value\r\n' })
+                end
+                return f
+            end, function()
+                local conn = api.redis.connect({ host = '127.0.0.1', port = 6379 })
+                -- simulate the first socket dying on the next receive.
+                sockets[1]._fail_recv = true
+                local result = conn:get('k')
+                -- a second socket was opened (reconnect) and the old one closed
+                assert.equals(2, make_count)
+                assert.is_true(sockets[1].closed)
+                -- the retried command ran on the new socket and returned its value
+                assert.equals('value', result)
+            end)
+        end)
+
+        it('returns the original error if the reconnect also fails', function()
+            local make_count = 0
+            with_fake(function()
+                make_count = make_count + 1
+                if make_count == 1 then
+                    local f = make_fake_socket()
+                    f._fail_recv = true
+                    return f
+                end
+                -- the reconnect attempt opens a socket whose connect() fails,
+                -- so reconnect() cannot recover and the original error stands.
+                local f = make_fake_socket()
+                f.connect = function() return nil, 'refused' end
+                return f
+            end, function()
+                local conn = api.redis.connect({ host = '127.0.0.1', port = 6379 })
+                local result, err = conn:get('k')
+                assert.is_nil(result)
+                assert.truthy(tostring(err):find('Redis read error'))
+            end)
+        end)
     end)
 
     -- Integration tests (require running Redis)
@@ -141,6 +308,24 @@ describe('redis adapter', function()
                     redis:set('other:c', '3')
                     local keys = redis:keys('prefix:*')
                     assert.equals(2, #keys)
+                end)
+
+                it('scan_all returns all matching keys', function()
+                    redis:set('scan:a', '1')
+                    redis:set('scan:b', '2')
+                    redis:set('nomatch:c', '3')
+                    local keys = redis:scan_all('scan:*')
+                    assert.equals(2, #keys)
+                    table.sort(keys)
+                    assert.equals('scan:a', keys[1])
+                    assert.equals('scan:b', keys[2])
+                end)
+
+                it('scan returns a cursor and a batch', function()
+                    redis:set('s1', '1')
+                    local cursor, batch = redis:scan('0', { count = 100 })
+                    assert.is_string(cursor)
+                    assert.is_table(batch)
                 end)
 
                 it('type returns key type', function()

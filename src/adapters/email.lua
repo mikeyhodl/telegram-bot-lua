@@ -29,7 +29,7 @@
             html = '<h1>Report</h1><p>Everything is fine.</p>',
         })
 
-        -- With CC and reply-to
+        -- with cc and reply-to
         mailer:send({
             from = 'bot@gmail.com',
             to = 'user@example.com',
@@ -37,6 +37,18 @@
             reply_to = 'noreply@example.com',
             subject = 'Notification',
             body = 'Bot message.',
+        })
+
+        -- with attachments (multipart/mixed)
+        mailer:send({
+            from = 'bot@gmail.com',
+            to = 'user@example.com',
+            subject = 'Your report',
+            body = 'See attached.',
+            attachments = {
+                { filename = 'report.csv', content = 'a,b\n1,2\n',
+                  content_type = 'text/csv' },
+            },
         })
 ]]
 
@@ -103,41 +115,79 @@ return function(api)
                 headers['Reply-To'] = msg.reply_to
             end
 
-            -- Build message body
-            local message_source
-            if msg.html and msg.body then
-                -- Multipart alternative: both text and HTML
-                headers['Content-Type'] = 'multipart/alternative; boundary="boundary_tbl"'
-                local parts = '--boundary_tbl\r\n'
-                    .. 'Content-Type: text/plain; charset=UTF-8\r\n'
-                    .. 'Content-Transfer-Encoding: quoted-printable\r\n\r\n'
-                    .. msg.body .. '\r\n'
-                    .. '--boundary_tbl\r\n'
-                    .. 'Content-Type: text/html; charset=UTF-8\r\n'
-                    .. 'Content-Transfer-Encoding: quoted-printable\r\n\r\n'
-                    .. msg.html .. '\r\n'
-                    .. '--boundary_tbl--\r\n'
+            -- render the body part as a self-contained mime entity: its own
+            -- content-type plus the encoded body. this is reused as-is whether
+            -- the message is sent on its own or nested inside multipart/mixed.
+            local function render_body_part()
+                if msg.html and msg.body then
+                    local boundary = 'boundary_alt'
+                    local content_type = 'multipart/alternative; boundary="' .. boundary .. '"'
+                    local part = '--' .. boundary .. '\r\n'
+                        .. 'Content-Type: text/plain; charset=UTF-8\r\n'
+                        .. 'Content-Transfer-Encoding: quoted-printable\r\n\r\n'
+                        .. msg.body .. '\r\n'
+                        .. '--' .. boundary .. '\r\n'
+                        .. 'Content-Type: text/html; charset=UTF-8\r\n'
+                        .. 'Content-Transfer-Encoding: quoted-printable\r\n\r\n'
+                        .. msg.html .. '\r\n'
+                        .. '--' .. boundary .. '--\r\n'
+                    return content_type, part
+                elseif msg.html then
+                    return 'text/html; charset=UTF-8', msg.html
+                else
+                    return 'text/plain; charset=UTF-8', msg.body
+                end
+            end
 
-                -- Build header string
+            -- serialise the top-level headers, applying an explicit content-type.
+            local function render_headers(content_type)
+                headers['Content-Type'] = content_type
                 local header_str = ''
                 for k, v in pairs(headers) do
                     header_str = header_str .. k .. ': ' .. v .. '\r\n'
                 end
-                message_source = ltn12.source.string(header_str .. '\r\n' .. parts)
-            elseif msg.html then
-                headers['Content-Type'] = 'text/html; charset=UTF-8'
-                local header_str = ''
-                for k, v in pairs(headers) do
-                    header_str = header_str .. k .. ': ' .. v .. '\r\n'
+                return header_str
+            end
+
+            -- base64-encode a string in fixed-width lines per rfc 2045.
+            local function base64_lines(data)
+                local mime = require('mime')
+                local encoded = (mime.b64(data))
+                local wrapped = {}
+                for i = 1, #encoded, 76 do
+                    wrapped[#wrapped + 1] = encoded:sub(i, i + 75)
                 end
-                message_source = ltn12.source.string(header_str .. '\r\n' .. msg.html)
+                return table.concat(wrapped, '\r\n')
+            end
+
+            local body_content_type, body_part = render_body_part()
+
+            -- build message body
+            local message_source
+            if msg.attachments and #msg.attachments > 0 then
+                -- wrap the body part and every attachment in multipart/mixed.
+                local boundary = 'boundary_mixed'
+                local mixed = '--' .. boundary .. '\r\n'
+                    .. 'Content-Type: ' .. body_content_type .. '\r\n\r\n'
+                    .. body_part .. '\r\n'
+                for _, att in ipairs(msg.attachments) do
+                    local filename = att.filename or 'attachment'
+                    local ctype = att.content_type or 'application/octet-stream'
+                    mixed = mixed
+                        .. '--' .. boundary .. '\r\n'
+                        .. 'Content-Type: ' .. ctype .. '; name="' .. filename .. '"\r\n'
+                        .. 'Content-Transfer-Encoding: base64\r\n'
+                        .. 'Content-Disposition: attachment; filename="' .. filename .. '"\r\n\r\n'
+                        .. base64_lines(att.content or '') .. '\r\n'
+                end
+                mixed = mixed .. '--' .. boundary .. '--\r\n'
+
+                local header_str = render_headers(
+                    'multipart/mixed; boundary="' .. boundary .. '"')
+                message_source = ltn12.source.string(header_str .. '\r\n' .. mixed)
             else
-                headers['Content-Type'] = 'text/plain; charset=UTF-8'
-                local header_str = ''
-                for k, v in pairs(headers) do
-                    header_str = header_str .. k .. ': ' .. v .. '\r\n'
-                end
-                message_source = ltn12.source.string(header_str .. '\r\n' .. msg.body)
+                local header_str = render_headers(body_content_type)
+                message_source = ltn12.source.string(header_str .. '\r\n' .. body_part)
             end
 
             -- Build the send parameters

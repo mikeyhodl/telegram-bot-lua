@@ -433,6 +433,280 @@ describe('llm adapter', function()
         end)
     end)
 
+    describe('tool calling', function()
+        local original_http_request
+
+        before_each(function()
+            original_http_request = api.adapters.http_request
+        end)
+
+        after_each(function()
+            api.adapters.http_request = original_http_request
+        end)
+
+        it('openai includes tools and tool_choice in the request body', function()
+            local captured_body
+            api.adapters.http_request = function(url, opts)
+                captured_body = json.decode(opts.body)
+                return json.encode({
+                    choices = {{ message = { content = 'ok' }, finish_reason = 'stop' }},
+                    usage = {}
+                }), 200
+            end
+
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k', model = 'gpt-4o' })
+            local tools = {{
+                type = 'function',
+                ['function'] = { name = 'get_weather', description = 'weather' },
+            }}
+            llm:chat({{ role = 'user', content = 'weather?' }}, {
+                tools = tools,
+                tool_choice = 'auto',
+            })
+
+            assert.is_table(captured_body.tools)
+            assert.equals('get_weather', captured_body.tools[1]['function'].name)
+            assert.equals('auto', captured_body.tool_choice)
+        end)
+
+        it('openai surfaces tool_calls in the response', function()
+            api.adapters.http_request = function()
+                return json.encode({
+                    choices = {{
+                        message = {
+                            role = 'assistant',
+                            content = nil,
+                            tool_calls = {{
+                                id = 'call_1',
+                                type = 'function',
+                                ['function'] = { name = 'get_weather', arguments = '{}' },
+                            }},
+                        },
+                        finish_reason = 'tool_calls',
+                    }},
+                    usage = {}
+                }), 200
+            end
+
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'weather?' }})
+            assert.is_table(result.tool_calls)
+            assert.equals(1, #result.tool_calls)
+            assert.equals('get_weather', result.tool_calls[1]['function'].name)
+            assert.equals('tool_calls', result.finish_reason)
+        end)
+
+        it('anthropic includes tools and tool_choice in the request body', function()
+            local captured_body
+            api.adapters.http_request = function(url, opts)
+                captured_body = json.decode(opts.body)
+                return json.encode({
+                    content = {{ type = 'text', text = 'ok' }},
+                    usage = { input_tokens = 1, output_tokens = 1 }
+                }), 200
+            end
+
+            local llm = api.llm.new({ provider = 'anthropic', api_key = 'k' })
+            local tools = {{ name = 'get_weather', description = 'weather', input_schema = {} }}
+            llm:chat({{ role = 'user', content = 'weather?' }}, {
+                tools = tools,
+                tool_choice = { type = 'auto' },
+            })
+
+            assert.is_table(captured_body.tools)
+            assert.equals('get_weather', captured_body.tools[1].name)
+            assert.equals('auto', captured_body.tool_choice.type)
+        end)
+
+        it('anthropic surfaces tool_use blocks as tool_calls and keeps text', function()
+            api.adapters.http_request = function()
+                return json.encode({
+                    content = {
+                        { type = 'text', text = 'Let me check. ' },
+                        {
+                            type = 'tool_use',
+                            id = 'toolu_1',
+                            name = 'get_weather',
+                            input = { city = 'Paris' },
+                        },
+                    },
+                    role = 'assistant',
+                    stop_reason = 'tool_use',
+                    usage = { input_tokens = 3, output_tokens = 4 }
+                }), 200
+            end
+
+            local llm = api.llm.new({ provider = 'anthropic', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'weather?' }})
+            -- text blocks are concatenated into content
+            assert.equals('Let me check. ', result.content)
+            -- tool_use blocks are surfaced as tool_calls
+            assert.is_table(result.tool_calls)
+            assert.equals(1, #result.tool_calls)
+            assert.equals('get_weather', result.tool_calls[1].name)
+            assert.equals('Paris', result.tool_calls[1].input.city)
+            assert.equals('tool_use', result.finish_reason)
+        end)
+
+        it('omits tool_calls when the model returns none (openai)', function()
+            api.adapters.http_request = function()
+                return json.encode({
+                    choices = {{ message = { content = 'plain' }, finish_reason = 'stop' }},
+                    usage = {}
+                }), 200
+            end
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'hi' }})
+            assert.is_nil(result.tool_calls)
+        end)
+    end)
+
+    describe('retry on transient errors', function()
+        local original_http_request
+
+        before_each(function()
+            original_http_request = api.adapters.http_request
+        end)
+
+        after_each(function()
+            api.adapters.http_request = original_http_request
+        end)
+
+        local function counting_sleeper()
+            local calls = { n = 0 }
+            return function() calls.n = calls.n + 1 end, calls
+        end
+
+        it('retries on 429 then succeeds (openai)', function()
+            local attempts = 0
+            api.adapters.http_request = function()
+                attempts = attempts + 1
+                if attempts < 2 then
+                    return json.encode({ error = { message = 'rate limited' } }), 429
+                end
+                return json.encode({
+                    choices = {{ message = { content = 'recovered' }, finish_reason = 'stop' }},
+                    usage = {}
+                }), 200
+            end
+
+            local sleeper, sleeps = counting_sleeper()
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'hi' }}, { _sleeper = sleeper })
+            assert.equals(2, attempts)
+            assert.equals(1, sleeps.n)
+            assert.equals('recovered', result.content)
+        end)
+
+        it('retries on 5xx then succeeds (anthropic)', function()
+            local attempts = 0
+            api.adapters.http_request = function()
+                attempts = attempts + 1
+                if attempts < 3 then
+                    return nil, 503
+                end
+                return json.encode({
+                    content = {{ type = 'text', text = 'ok' }},
+                    usage = { input_tokens = 1, output_tokens = 1 }
+                }), 200
+            end
+
+            local sleeper = counting_sleeper()
+            local llm = api.llm.new({ provider = 'anthropic', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'hi' }}, { _sleeper = sleeper })
+            assert.equals(3, attempts)
+            assert.equals('ok', result.content)
+        end)
+
+        it('retries on nil response (transport failure) then succeeds', function()
+            local attempts = 0
+            api.adapters.http_request = function()
+                attempts = attempts + 1
+                if attempts < 2 then
+                    return nil, 'connection reset'
+                end
+                return json.encode({
+                    choices = {{ message = { content = 'ok' }, finish_reason = 'stop' }},
+                    usage = {}
+                }), 200
+            end
+
+            local sleeper = counting_sleeper()
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result = llm:chat({{ role = 'user', content = 'hi' }}, { _sleeper = sleeper })
+            assert.equals(2, attempts)
+            assert.equals('ok', result.content)
+        end)
+
+        it('does not retry on a non-429 4xx error', function()
+            local attempts = 0
+            api.adapters.http_request = function()
+                attempts = attempts + 1
+                return json.encode({ error = { message = 'bad request' } }), 400
+            end
+
+            local sleeper, sleeps = counting_sleeper()
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result, err = llm:chat({{ role = 'user', content = 'hi' }}, { _sleeper = sleeper })
+            assert.is_nil(result)
+            assert.truthy(tostring(err):find('bad request'))
+            assert.equals(1, attempts)
+            assert.equals(0, sleeps.n)
+        end)
+
+        it('gives up after the attempt limit on persistent failure', function()
+            local attempts = 0
+            api.adapters.http_request = function()
+                attempts = attempts + 1
+                return nil, 500
+            end
+
+            local sleeper = counting_sleeper()
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local result, err = llm:chat({{ role = 'user', content = 'hi' }}, { _sleeper = sleeper })
+            assert.is_nil(result)
+            assert.truthy(tostring(err):find('HTTP request failed'))
+            assert.equals(3, attempts)
+        end)
+    end)
+
+    describe('no mutation of caller messages', function()
+        local original_http_request
+
+        before_each(function()
+            original_http_request = api.adapters.http_request
+            api.adapters.http_request = function()
+                return json.encode({
+                    choices = {{ message = { content = 'ok' }, finish_reason = 'stop' }},
+                    usage = {},
+                    content = {{ type = 'text', text = 'ok' }},
+                }), 200
+            end
+        end)
+
+        after_each(function()
+            api.adapters.http_request = original_http_request
+        end)
+
+        it('openai does not grow the shared messages array across calls', function()
+            local llm = api.llm.new({ provider = 'openai', api_key = 'k' })
+            local messages = {{ role = 'user', content = 'hi' }}
+            llm:chat(messages, { system = 'you are a bot' })
+            llm:chat(messages, { system = 'you are a bot' })
+            -- the system prompt must not have been inserted into the caller copy
+            assert.equals(1, #messages)
+            assert.equals('user', messages[1].role)
+        end)
+
+        it('anthropic does not mutate the shared messages array', function()
+            local llm = api.llm.new({ provider = 'anthropic', api_key = 'k' })
+            local messages = {{ role = 'user', content = 'hi' }}
+            llm:chat(messages, { system = 'you are a bot' })
+            llm:chat(messages, { system = 'you are a bot' })
+            assert.equals(1, #messages)
+        end)
+    end)
+
     describe('adapters utility', function()
         it('is_async returns false outside copas', function()
             assert.is_false(api.adapters.is_async())
