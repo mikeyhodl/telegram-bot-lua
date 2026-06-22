@@ -121,11 +121,11 @@ function api._http_request(endpoint, parameters, file)
         ['sink'] = ltn12.sink.table(response)
     })
     if not pok then
-        print('Connection error [' .. tostring(success) .. ']')
+        api.log.warn('connection error:', success)
         return false, success
     end
     if not success then
-        print('Connection error [' .. tostring(res) .. ']')
+        api.log.warn('connection error:', res)
         return false, res
     end
     local jstr = table.concat(response)
@@ -245,7 +245,8 @@ function api.close()
     return success, res
 end
 
--- Load all modules
+-- load all modules
+require('telegram-bot-lua.log')(api)
 require('telegram-bot-lua.middleware')(api)
 require('telegram-bot-lua.handlers')(api)
 require('telegram-bot-lua.builders')(api)

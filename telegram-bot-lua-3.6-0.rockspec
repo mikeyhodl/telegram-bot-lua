@@ -31,6 +31,7 @@ build = {
     modules = {
         ["telegram-bot-lua"] = "src/main.lua",
         ["telegram-bot-lua.config"] = "src/config.lua",
+        ["telegram-bot-lua.log"] = "src/log.lua",
         ["telegram-bot-lua.middleware"] = "src/middleware.lua",
         ["telegram-bot-lua.handlers"] = "src/handlers.lua",
         ["telegram-bot-lua.builders"] = "src/builders.lua",

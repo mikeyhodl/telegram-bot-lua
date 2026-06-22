@@ -39,6 +39,7 @@ describe('module structure', function()
         local rockspec_modules = {
             ['telegram-bot-lua'] = 'src/main.lua',
             ['telegram-bot-lua.config'] = 'src/config.lua',
+            ['telegram-bot-lua.log'] = 'src/log.lua',
             ['telegram-bot-lua.handlers'] = 'src/handlers.lua',
             ['telegram-bot-lua.builders'] = 'src/builders.lua',
             ['telegram-bot-lua.builders_rich'] = 'src/builders_rich.lua',

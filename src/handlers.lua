@@ -267,6 +267,7 @@ return function(api)
                         print('Update handler error: ' .. tostring(err))
                     end
                     offset = v.update_id + 1
+                    if api.metrics then api.metrics.incr('updates') end
                 end
             else
                 -- get_updates returned false or a malformed payload. back off
@@ -274,7 +275,7 @@ return function(api)
                 -- configuration error (duplicate poller / webhook still set),
                 -- not transient, so surface it loudly.
                 if type(perr) == 'table' and tonumber(perr.error_code) == 409 then
-                    print('Polling conflict (409): another getUpdates is running for this ' ..
+                    api.log.warn('polling conflict (409): another getUpdates is running for this ' ..
                         'bot, or a webhook is still set. stop the other instance or call ' ..
                         'api.delete_webhook().')
                 elseif api.debug then
