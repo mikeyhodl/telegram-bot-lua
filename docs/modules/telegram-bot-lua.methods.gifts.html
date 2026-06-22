@@ -50,10 +50,13 @@
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.chat.html">telegram-bot-lua.methods.chat</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
@@ -71,7 +74,9 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 <h2>Topics</h2>
@@ -93,6 +98,10 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#api.convert_gift_to_stars">api.convert_gift_to_stars(business_connection_id, owned_gift_id)</a></td>
+	<td class="summary">convert a given regular gift to telegram stars.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.get_available_gifts">api.get_available_gifts()</a></td>
 	<td class="summary">get the list of gifts that can be sent by the bot.</td>
 	</tr>
@@ -101,8 +110,20 @@
 	<td class="summary">get the list of gifts received by a user.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.gift_premium_subscription">api.gift_premium_subscription(user_id, month_count, star_count, opts)</a></td>
+	<td class="summary">gift a telegram premium subscription to a given user.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.send_gift">api.send_gift(user_id, gift_id, opts)</a></td>
 	<td class="summary">send a gift to a user.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.transfer_gift">api.transfer_gift(business_connection_id, owned_gift_id, new_owner_chat_id, opts)</a></td>
+	<td class="summary">transfer an owned unique gift to another user.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.upgrade_gift">api.upgrade_gift(business_connection_id, owned_gift_id, opts)</a></td>
+	<td class="summary">upgrade a given regular gift to a unique gift.</td>
 	</tr>
 </table>
 
@@ -113,6 +134,36 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
+    <dt>
+    <a name = "api.convert_gift_to_stars"></a>
+    <strong>api.convert_gift_to_stars(business_connection_id, owned_gift_id)</strong>
+    </dt>
+    <dd>
+    convert a given regular gift to telegram stars.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">business_connection_id</span>
+         string unique identifier of the business connection
+        </li>
+        <li><span class="parameter">owned_gift_id</span>
+         string unique identifier of the regular gift that should be converted
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table|false true on success, or false on failure</li>
+        <li>
+        string|table the HTTP status or error details</li>
+    </ol>
+
+
+
+
+</dd>
     <dt>
     <a name = "api.get_available_gifts"></a>
     <strong>api.get_available_gifts()</strong>
@@ -162,6 +213,51 @@
 
 </dd>
     <dt>
+    <a name = "api.gift_premium_subscription"></a>
+    <strong>api.gift_premium_subscription(user_id, month_count, star_count, opts)</strong>
+    </dt>
+    <dd>
+    gift a telegram premium subscription to a given user.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number unique identifier of the target user who will receive the subscription
+        </li>
+        <li><span class="parameter">month_count</span>
+         number number of months the subscription will be active; one of 3, 6, or 12
+        </li>
+        <li><span class="parameter">star_count</span>
+         number number of telegram stars to pay for the subscription
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">text</span>
+         string text shown along with the service message; 0-128 characters
+        </li>
+        <li><span class="parameter">text_parse_mode</span>
+         string mode for parsing entities in the text
+        </li>
+        <li><span class="parameter">text_entities</span>
+         table|string a JSON-serialized list of special entities in the gift text
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table|false true on success, or false on failure</li>
+        <li>
+        string|table the HTTP status or error details</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.send_gift"></a>
     <strong>api.send_gift(user_id, gift_id, opts)</strong>
     </dt>
@@ -194,6 +290,84 @@
 
 
 </dd>
+    <dt>
+    <a name = "api.transfer_gift"></a>
+    <strong>api.transfer_gift(business_connection_id, owned_gift_id, new_owner_chat_id, opts)</strong>
+    </dt>
+    <dd>
+    transfer an owned unique gift to another user.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">business_connection_id</span>
+         string unique identifier of the business connection
+        </li>
+        <li><span class="parameter">owned_gift_id</span>
+         string unique identifier of the regular gift that should be transferred
+        </li>
+        <li><span class="parameter">new_owner_chat_id</span>
+         number unique identifier of the chat which will own the gift
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">star_count</span>
+         number the amount of telegram stars that will be paid for the transfer
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table|false true on success, or false on failure</li>
+        <li>
+        string|table the HTTP status or error details</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.upgrade_gift"></a>
+    <strong>api.upgrade_gift(business_connection_id, owned_gift_id, opts)</strong>
+    </dt>
+    <dd>
+    upgrade a given regular gift to a unique gift.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">business_connection_id</span>
+         string unique identifier of the business connection
+        </li>
+        <li><span class="parameter">owned_gift_id</span>
+         string unique identifier of the regular gift that should be upgraded
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">keep_original_details</span>
+         boolean pass true to keep the original gift text, sender and receiver
+        </li>
+        <li><span class="parameter">star_count</span>
+         number the amount of telegram stars that will be paid for the upgrade
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        table|false true on success, or false on failure</li>
+        <li>
+        string|table the HTTP status or error details</li>
+    </ol>
+
+
+
+
+</dd>
 </dl>
 
 
@@ -201,7 +375,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
+<i style="float:right;">Last updated 2026-06-22 21:59:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

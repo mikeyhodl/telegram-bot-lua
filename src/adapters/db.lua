@@ -3,7 +3,9 @@
 --[[
     Database adapter for telegram-bot-lua.
     Supports SQLite (via lsqlite3) and PostgreSQL (via pgmoon).
-    Async-first: uses non-blocking I/O inside copas, sync fallback otherwise.
+    Note: the SQLite driver (lsqlite3) is synchronous and blocking; it does not
+    yield inside copas. PostgreSQL (via pgmoon) uses a copas-wrapped socket and
+    is non-blocking when running inside a copas context.
 
     Usage:
         local db = api.db.connect({
@@ -76,18 +78,60 @@ return function(api)
             _handle = db_handle,
             _driver = 'sqlite',
             _path = path,
+            -- compiled statements keyed by sql string, reset (not finalised)
+            -- between calls so hot queries are not recompiled every time.
+            _stmt_cache = {},
+            _stmt_cache_count = 0,
         }
 
-        function conn:execute(sql, params)
+        -- bound on the number of cached statements. when exceeded the cache is
+        -- finalised and cleared, so long-lived connections issuing many unique
+        -- statements do not leak compiled-statement handles.
+        local STMT_CACHE_LIMIT = 128
+
+        -- finalise and drop every cached statement.
+        local function clear_stmt_cache(self)
+            for _, stmt in pairs(self._stmt_cache) do
+                pcall(function() stmt:finalize() end)
+            end
+            self._stmt_cache = {}
+            self._stmt_cache_count = 0
+        end
+
+        -- fetch a compiled statement for sql, preferring the cache. a cached
+        -- statement is reset before reuse so prior execution state never leaks
+        -- into the next call; callers always re-bind the full parameter set for
+        -- a given sql string, so bindings stay correct. returns (stmt) or
+        -- (nil, errmsg).
+        local function get_stmt(self, sql)
+            local cached = self._stmt_cache[sql]
+            if cached then
+                cached:reset()
+                return cached
+            end
             local stmt = self._handle:prepare(sql)
             if not stmt then
-                return false, self._handle:errmsg()
+                return nil, self._handle:errmsg()
+            end
+            if self._stmt_cache_count >= STMT_CACHE_LIMIT then
+                clear_stmt_cache(self)
+            end
+            self._stmt_cache[sql] = stmt
+            self._stmt_cache_count = self._stmt_cache_count + 1
+            return stmt
+        end
+
+        function conn:execute(sql, params)
+            local stmt, prep_err = get_stmt(self, sql)
+            if not stmt then
+                return false, prep_err
             end
             if params then
                 stmt:bind_values((table.unpack or unpack)(params))
             end
             local result = stmt:step()
-            stmt:finalize()
+            -- reset (not finalise) so the cached statement is reusable.
+            stmt:reset()
             if result == sqlite3.DONE then
                 return true, self._handle:changes()
             elseif result == sqlite3.ROW then
@@ -98,9 +142,9 @@ return function(api)
         end
 
         function conn:query(sql, params)
-            local stmt = self._handle:prepare(sql)
+            local stmt, prep_err = get_stmt(self, sql)
             if not stmt then
-                return nil, self._handle:errmsg()
+                return nil, prep_err
             end
             if params then
                 stmt:bind_values((table.unpack or unpack)(params))
@@ -109,12 +153,14 @@ return function(api)
             for row in stmt:nrows() do
                 rows[#rows + 1] = row
             end
-            stmt:finalize()
+            -- nrows() drives the statement to completion; reset for reuse.
+            stmt:reset()
             return rows
         end
 
         function conn:close()
             if self._handle then
+                clear_stmt_cache(self)
                 self._handle:close()
                 self._handle = nil
             end

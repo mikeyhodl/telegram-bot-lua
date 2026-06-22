@@ -2,6 +2,7 @@
 -- @module telegram-bot-lua.methods.messages
 return function(api)
     local json = require('dkjson')
+    local function json_enc(v) return type(v) == 'table' and json.encode(v) or v end
     local config = require('telegram-bot-lua.config')
 
     --- send a text message to a chat.
@@ -32,12 +33,14 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendMessage', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['text'] = text,
             ['parse_mode'] = parse_mode,
             ['entities'] = entities,
             ['link_preview_options'] = link_preview_options,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -105,9 +108,11 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/forwardMessage', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['from_chat_id'] = from_chat_id,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['message_id'] = message_id
         })
         return success, res
@@ -128,6 +133,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/forwardMessages', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['from_chat_id'] = from_chat_id,
             ['message_ids'] = message_ids,
             ['disable_notification'] = opts.disable_notification,
@@ -158,6 +164,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/copyMessage', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['from_chat_id'] = from_chat_id,
             ['message_id'] = message_id,
             ['caption'] = opts.caption,
@@ -166,6 +173,7 @@ return function(api)
             ['show_caption_above_media'] = opts.show_caption_above_media,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup
         })
@@ -188,6 +196,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/copyMessages', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['from_chat_id'] = from_chat_id,
             ['message_ids'] = message_ids,
             ['disable_notification'] = opts.disable_notification,
@@ -219,6 +228,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendPhoto', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['caption'] = opts.caption,
             ['parse_mode'] = opts.parse_mode,
             ['caption_entities'] = caption_entities,
@@ -226,6 +236,7 @@ return function(api)
             ['has_spoiler'] = opts.has_spoiler,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -309,6 +320,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendAudio', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['caption'] = opts.caption,
             ['parse_mode'] = opts.parse_mode,
             ['caption_entities'] = caption_entities,
@@ -317,6 +329,7 @@ return function(api)
             ['title'] = opts.title,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -352,12 +365,14 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendDocument', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['caption'] = opts.caption,
             ['parse_mode'] = opts.parse_mode,
             ['caption_entities'] = caption_entities,
             ['disable_content_type_detection'] = opts.disable_content_type_detection,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -396,6 +411,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendVideo', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['duration'] = opts.duration,
             ['width'] = opts.width,
             ['height'] = opts.height,
@@ -407,6 +423,7 @@ return function(api)
             ['supports_streaming'] = opts.supports_streaming,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -443,6 +460,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendAnimation', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['duration'] = opts.duration,
             ['width'] = opts.width,
             ['height'] = opts.height,
@@ -453,6 +471,7 @@ return function(api)
             ['has_spoiler'] = opts.has_spoiler,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -487,12 +506,14 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendVoice', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['caption'] = opts.caption,
             ['parse_mode'] = opts.parse_mode,
             ['caption_entities'] = caption_entities,
             ['duration'] = opts.duration,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -523,10 +544,12 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendVideoNote', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['duration'] = opts.duration,
             ['length'] = opts.length,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -556,6 +579,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendMediaGroup', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['media'] = media,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
@@ -587,6 +611,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendLocation', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['latitude'] = latitude,
             ['longitude'] = longitude,
             ['horizontal_accuracy'] = opts.horizontal_accuracy,
@@ -595,6 +620,7 @@ return function(api)
             ['proximity_alert_radius'] = opts.proximity_alert_radius,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -626,6 +652,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendVenue', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['latitude'] = latitude,
             ['longitude'] = longitude,
             ['title'] = title,
@@ -636,6 +663,7 @@ return function(api)
             ['google_place_type'] = opts.google_place_type,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -664,12 +692,14 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendContact', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['phone_number'] = phone_number,
             ['first_name'] = first_name,
             ['last_name'] = opts.last_name,
             ['vcard'] = opts.vcard,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -771,9 +801,11 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendDice', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['emoji'] = opts.emoji,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,
@@ -879,6 +911,7 @@ return function(api)
         reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
         local success, res = api.request(config.endpoint .. api.token .. '/sendPaidMedia', {
             ['chat_id'] = chat_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['star_count'] = star_count,
             ['media'] = media,
             ['caption'] = opts.caption,
@@ -887,6 +920,7 @@ return function(api)
             ['show_caption_above_media'] = opts.show_caption_above_media,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,

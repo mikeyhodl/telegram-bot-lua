@@ -30,8 +30,12 @@ api.run({ timeout = 60 })
 
 ## Key Features
 
-- Full Bot API 10.1 coverage (messages, media, payments, stickers, forums, games, gifts, stories, rich messages, live photos, and more)
+- Full Bot API 10.1 coverage (messages, media, payments, stickers, forums, games, gifts, stories, business accounts, rich messages, live photos, and more)
 - **Async-first architecture** via copas: concurrent updates, parallel API calls, background tasks
+- **Framework layer**: command router, conversations, and per-chat/user sessions
+- **Built-in webhook receiver** with x-telegram-bot-api secret-token verification
+- **Automatic 429 / retry_after flood-control** with bounded exponential backoff
+- **Structured logging and lightweight metrics** with a configurable sink
 - **Built-in adapters**: SQLite, PostgreSQL, Redis, OpenAI, Anthropic (Claude), and SMTP email
 - **Lua 5.1 - 5.5 support** with automatic polyfills for bitwise operations and string.pack
 - Clean opts-table pattern for all API methods
@@ -49,6 +53,7 @@ api.run({ timeout = 60 })
 | [Update Handlers](docs/handlers.md) | All available update handler functions |
 | [API Methods](docs/methods.md) | Complete method reference |
 | [Builders](docs/builders.md) | Keyboards, inline results, and type constructors |
+| [Framework](docs/framework.md) | Command router, sessions, conversations, webhooks, retries, logging |
 | [Utilities](docs/utilities.md) | Formatting, command parsing, pagination, and tools |
 | [Async / Concurrency](docs/async.md) | Concurrent updates, parallel calls, background tasks |
 | [Adapters](docs/adapters.md) | Database, Redis, LLM, and email integrations |
@@ -66,7 +71,7 @@ db:execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)
 local llm = api.llm.new({
     provider = 'anthropic',
     api_key = os.getenv('ANTHROPIC_API_KEY'),
-    model = 'claude-sonnet-4-5-20250929',
+    model = 'claude-sonnet-4-6',
 })
 
 function api.on_message(message)
@@ -102,11 +107,15 @@ src/
   polyfill.lua          -- Lua 5.1+ compatibility (bit ops, string.pack)
   async.lua             -- Copas-based concurrency module
   b64url.lua            -- Base64 URL encoding/decoding
+  log.lua               -- Structured logging and lightweight metrics
   tools.lua             -- Utility functions (formatting, file ops, etc.)
   handlers.lua          -- Update routing and on_* handler stubs (async-first)
   builders.lua          -- Keyboard, inline result, and type constructors
   builders_rich.lua     -- Rich message builders (RichText/RichBlock DSL)
   helpers.lua           -- Member status check helpers
+  session.lua           -- Per-chat/user session store (pluggable backends)
+  framework.lua         -- Command router, rich ctx, and conversations
+  webhook.lua           -- Webhook receiver (process + turnkey copas server)
   utils.lua             -- Bot development utilities (fmt, commands, pagination)
   compat.lua            -- v2 backward compatibility layer
   adapters/
@@ -130,6 +139,7 @@ src/
     gifts.lua           -- Gift methods
     checklists.lua      -- Checklist methods
     stories.lua         -- Story methods
+    business.lua        -- Business account methods
     suggested_posts.lua -- Suggested post methods
     rich.lua            -- Rich message methods (send_rich_message, drafts)
 ```

@@ -50,10 +50,13 @@
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><strong>telegram-bot-lua.methods.bot</strong></li>
+  <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.chat.html">telegram-bot-lua.methods.chat</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
@@ -71,7 +74,9 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 <h2>Topics</h2>
@@ -137,8 +142,16 @@
 	<td class="summary">get recent messages from a user's personal chat (Bot API 10.0).</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.remove_chat_verification">api.remove_chat_verification(chat_id)</a></td>
+	<td class="summary">remove verification from a chat that is currently verified on behalf of the organisation.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.remove_my_profile_photo">api.remove_my_profile_photo(opts)</a></td>
 	<td class="summary">remove the bot's profile photo.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.remove_user_verification">api.remove_user_verification(user_id)</a></td>
+	<td class="summary">remove verification from a user who is currently verified on behalf of the organisation.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.replace_managed_bot_token">api.replace_managed_bot_token(user_id)</a></td>
@@ -179,6 +192,18 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.set_my_short_description">api.set_my_short_description(short_description, opts)</a></td>
 	<td class="summary">change the bot's short description.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.set_user_emoji_status">api.set_user_emoji_status(user_id, opts)</a></td>
+	<td class="summary">change the emoji status for a given user that previously allowed the bot to manage their emoji status.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.verify_chat">api.verify_chat(chat_id, opts)</a></td>
+	<td class="summary">verify a chat on behalf of the organisation which is represented by the bot.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.verify_user">api.verify_user(user_id, opts)</a></td>
+	<td class="summary">verify a user on behalf of the organisation which is represented by the bot.</td>
 	</tr>
 </table>
 
@@ -495,6 +520,31 @@
 
 </dd>
     <dt>
+    <a name = "api.remove_chat_verification"></a>
+    <strong>api.remove_chat_verification(chat_id)</strong>
+    </dt>
+    <dd>
+    remove verification from a chat that is currently verified on behalf of the organisation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target channel
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.remove_my_profile_photo"></a>
     <strong>api.remove_my_profile_photo(opts)</strong>
     </dt>
@@ -510,6 +560,31 @@
          boolean pass true to remove the public photo
         </li>
         </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.remove_user_verification"></a>
+    <strong>api.remove_user_verification(user_id)</strong>
+    </dt>
+    <dd>
+    remove verification from a user who is currently verified on behalf of the organisation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number unique identifier of the target user
+        </li>
     </ul>
 
     <h3>Returns:</h3>
@@ -829,6 +904,102 @@
 
 
 </dd>
+    <dt>
+    <a name = "api.set_user_emoji_status"></a>
+    <strong>api.set_user_emoji_status(user_id, opts)</strong>
+    </dt>
+    <dd>
+    change the emoji status for a given user that previously allowed the bot to manage their emoji status.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number unique identifier of the target user
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">emoji_status_custom_emoji_id</span>
+         string custom emoji identifier of the emoji status to set
+        </li>
+        <li><span class="parameter">emoji_status_expiration_date</span>
+         number expiration date of the emoji status, if any
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.verify_chat"></a>
+    <strong>api.verify_chat(chat_id, opts)</strong>
+    </dt>
+    <dd>
+    verify a chat on behalf of the organisation which is represented by the bot.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target channel
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">custom_description</span>
+         string custom description for the verification; 0-70 characters
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.verify_user"></a>
+    <strong>api.verify_user(user_id, opts)</strong>
+    </dt>
+    <dd>
+    verify a user on behalf of the organisation which is represented by the bot.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number unique identifier of the target user
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">custom_description</span>
+         string custom description for the verification; 0-70 characters
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
 </dl>
 
 
@@ -836,7 +1007,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
+<i style="float:right;">Last updated 2026-06-22 21:59:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

@@ -8,13 +8,17 @@ package.path = './src/?.lua;./src/?/init.lua;' .. package.path
 local module_map = {
     ['telegram-bot-lua'] = 'src/main.lua',
     ['telegram-bot-lua.config'] = 'src/config.lua',
+    ['telegram-bot-lua.log'] = 'src/log.lua',
     ['telegram-bot-lua.handlers'] = 'src/handlers.lua',
     ['telegram-bot-lua.builders'] = 'src/builders.lua',
     ['telegram-bot-lua.builders_rich'] = 'src/builders_rich.lua',
     ['telegram-bot-lua.helpers'] = 'src/helpers.lua',
+    ['telegram-bot-lua.session'] = 'src/session.lua',
+    ['telegram-bot-lua.framework'] = 'src/framework.lua',
     ['telegram-bot-lua.tools'] = 'src/tools.lua',
     ['telegram-bot-lua.utils'] = 'src/utils.lua',
     ['telegram-bot-lua.async'] = 'src/async.lua',
+    ['telegram-bot-lua.webhook'] = 'src/webhook.lua',
     ['telegram-bot-lua.compat'] = 'src/compat.lua',
     ['telegram-bot-lua.core'] = 'src/core.lua',
     ['telegram-bot-lua.polyfill'] = 'src/polyfill.lua',
@@ -33,6 +37,7 @@ local module_map = {
     ['telegram-bot-lua.methods.gifts'] = 'src/methods/gifts.lua',
     ['telegram-bot-lua.methods.checklists'] = 'src/methods/checklists.lua',
     ['telegram-bot-lua.methods.stories'] = 'src/methods/stories.lua',
+    ['telegram-bot-lua.methods.business'] = 'src/methods/business.lua',
     ['telegram-bot-lua.methods.suggested_posts'] = 'src/methods/suggested_posts.lua',
     ['telegram-bot-lua.methods.rich'] = 'src/methods/rich.lua',
     ['telegram-bot-lua.middleware'] = 'src/middleware.lua',
@@ -65,7 +70,7 @@ api.info.name = api.info.first_name
 -- api._real_request, defeating any test that calls the real implementation.
 api._requests = api._requests or {}
 if not api._real_request then
-    api._real_request = api.request
+    api._real_request = api._http_request
 end
 api.request = function(endpoint, parameters, file)
     table.insert(api._requests, {

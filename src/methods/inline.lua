@@ -160,4 +160,28 @@ return function(api)
             ['reply_markup'] = reply_markup
         }}))
     end
+
+    --- store a message that can be sent by a user of a mini app.
+    -- @param user_id number unique identifier of the target user that can use the prepared message
+    -- @param result string|table a JSON-serialised InlineQueryResult describing the message to be sent
+    -- @param opts table optional parameters
+    -- @param opts.allow_user_chats boolean pass true if the message can be sent to private chats with users
+    -- @param opts.allow_bot_chats boolean pass true if the message can be sent to private chats with bots
+    -- @param opts.allow_group_chats boolean pass true if the message can be sent to group and supergroup chats
+    -- @param opts.allow_channel_chats boolean pass true if the message can be sent to channel chats
+    -- @return table|false the prepared inline message, or false on failure
+    -- @return string|table the HTTP status or error details
+    function api.save_prepared_inline_message(user_id, result, opts)
+        opts = opts or {}
+        result = type(result) == 'table' and json.encode(result) or result
+        local success, res = api.request(config.endpoint .. api.token .. '/savePreparedInlineMessage', {
+            ['user_id'] = user_id,
+            ['result'] = result,
+            ['allow_user_chats'] = opts.allow_user_chats,
+            ['allow_bot_chats'] = opts.allow_bot_chats,
+            ['allow_group_chats'] = opts.allow_group_chats,
+            ['allow_channel_chats'] = opts.allow_channel_chats
+        })
+        return success, res
+    end
 end

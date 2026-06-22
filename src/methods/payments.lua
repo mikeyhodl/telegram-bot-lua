@@ -2,6 +2,7 @@
 -- @module telegram-bot-lua.methods.payments
 return function(api)
     local json = require('dkjson')
+    local function json_enc(v) return type(v) == 'table' and json.encode(v) or v end
     local config = require('telegram-bot-lua.config')
 
     --- send an invoice to a chat.
@@ -28,6 +29,7 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendInvoice', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['title'] = title,
             ['description'] = description,
             ['payload'] = payload,
@@ -51,6 +53,7 @@ return function(api)
             ['is_flexible'] = opts.is_flexible,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['message_effect_id'] = opts.message_effect_id,
@@ -181,6 +184,14 @@ return function(api)
             ['telegram_payment_charge_id'] = telegram_payment_charge_id,
             ['is_canceled'] = is_canceled
         })
+        return success, res
+    end
+
+    --- get the current telegram stars balance of the bot.
+    -- @return table|false the star amount object, or false on failure
+    -- @return string|table the HTTP status or error details
+    function api.get_my_star_balance()
+        local success, res = api.request(config.endpoint .. api.token .. '/getMyStarBalance')
         return success, res
     end
 end

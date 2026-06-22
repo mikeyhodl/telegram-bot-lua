@@ -321,4 +321,38 @@ return function(api)
         })
         return success, res
     end
+
+    --- create a subscription invite link for a channel chat.
+    -- @param chat_id number|string unique identifier for the target channel chat or username of the target channel
+    -- @param subscription_period number the number of seconds the subscription will be active before the next payment
+    -- @param subscription_price number the amount of telegram stars a user must pay to be a member of the chat; 1-10000
+    -- @param opts table optional parameters
+    -- @param opts.name string invite link name (max 32 characters)
+    -- @return table,number the response object and HTTP status
+    function api.create_chat_subscription_invite_link(chat_id, subscription_period, subscription_price, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/createChatSubscriptionInviteLink', {
+            ['chat_id'] = chat_id,
+            ['name'] = opts.name,
+            ['subscription_period'] = subscription_period,
+            ['subscription_price'] = subscription_price
+        })
+        return success, res
+    end
+
+    --- edit a subscription invite link created by the bot.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target channel
+    -- @param invite_link string the invite link to edit
+    -- @param opts table optional parameters
+    -- @param opts.name string invite link name (max 32 characters)
+    -- @return table,number the response object and HTTP status
+    function api.edit_chat_subscription_invite_link(chat_id, invite_link, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/editChatSubscriptionInviteLink', {
+            ['chat_id'] = chat_id,
+            ['invite_link'] = invite_link,
+            ['name'] = opts.name
+        })
+        return success, res
+    end
 end

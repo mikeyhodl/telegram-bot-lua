@@ -42,33 +42,40 @@ return function(api)
     -- @param parameters table optional request parameters
     -- @param file table optional file upload map
     -- @return table decoded JSON response, or false on error
-    function api.async.request(endpoint, parameters, file)
+    function api.async._http_request(endpoint, parameters, file)
         assert(endpoint, 'You must specify an endpoint to make this request to!')
         parameters = parameters or {}
+        -- shallow copy so the caller's table is never mutated; stringify
+        -- scalars for multipart, leave tables (file parts) untouched.
+        local params = {}
         for k, v in pairs(parameters) do
-            parameters[k] = tostring(v)
+            params[k] = type(v) == 'table' and v or tostring(v)
         end
+        parameters = params
         if api.debug then
             local safe = {}
             for k, v in pairs(parameters) do safe[k] = v end
             local output = json.encode(safe, { ['indent'] = true })
             print(output)
         end
-        if file and next(file) ~= nil then
-            local file_type, file_name = next(file)
-            if type(file_name) == 'string' then
-                local file_res = io.open(file_name, 'rb')
-                if file_res then
-                    parameters[file_type] = {
-                        filename = file_name,
-                        data = file_res:read('*a')
-                    }
-                    file_res:close()
+        -- iterate every file part (mirrors the sync path); next(file) alone
+        -- would only handle the first key and silently drop e.g. a thumbnail.
+        if file then
+            for file_type, file_name in pairs(file) do
+                if type(file_name) == 'string' then
+                    local file_res = io.open(file_name, 'rb')
+                    if file_res then
+                        parameters[file_type] = {
+                            filename = file_name,
+                            data = file_res:read('*a')
+                        }
+                        file_res:close()
+                    else
+                        parameters[file_type] = file_name
+                    end
                 else
                     parameters[file_type] = file_name
                 end
-            else
-                parameters[file_type] = file_name
             end
         end
         parameters = next(parameters) == nil and {''} or parameters
@@ -100,7 +107,7 @@ return function(api)
         local jstr = table.concat(response)
         local jdat = json.decode(jstr)
         if not jdat then
-            return false, res
+            return false, { ['ok'] = false, ['description'] = 'failed to decode API response', ['body'] = jstr }
         elseif not jdat.ok then
             if api.debug then
                 local output = '\n' .. tostring(jdat.description) .. ' [' .. tostring(jdat.error_code) .. ']\n'
@@ -109,6 +116,14 @@ return function(api)
             return false, jdat
         end
         return jdat, res
+    end
+
+    --- send an async request under the shared retry policy (api.retry).
+    -- uses copas.sleep so honouring 429 / backing off never blocks the loop.
+    function api.async.request(endpoint, parameters, file)
+        return api._with_retry(function()
+            return api.async._http_request(endpoint, parameters, file)
+        end, function(seconds) copas.sleep(seconds) end)
     end
 
     --- run the bot with concurrent update processing.
@@ -136,7 +151,7 @@ return function(api)
 
         copas.addthread(function()
             while api.async._running do
-                local pok, updates = pcall(api.get_updates, {
+                local pok, updates, perr = pcall(api.get_updates, {
                     timeout = timeout,
                     offset = offset,
                     limit = limit,
@@ -150,7 +165,7 @@ return function(api)
                     backoff = math.min(backoff * 2, max_backoff)
                 elseif updates and type(updates) == 'table' and updates.result then
                     backoff = 1
-                    for _, v in pairs(updates.result) do
+                    for _, v in ipairs(updates.result) do
                         -- each update gets its own coroutine
                         copas.addthread(function()
                             local ok, err = pcall(api.process_update, v)
@@ -159,11 +174,18 @@ return function(api)
                             end
                         end)
                         offset = v.update_id + 1
+                        if api.metrics then api.metrics.incr('updates') end
                     end
                 else
                     -- get_updates returned false or a malformed payload. back
                     -- off so a sustained server-side error doesn't pin a cpu.
-                    if api.debug then
+                    -- a 409 is a configuration error (duplicate poller / webhook
+                    -- still set), not transient, so surface it loudly.
+                    if type(perr) == 'table' and tonumber(perr.error_code) == 409 then
+                        api.log.warn('polling conflict (409): another getUpdates is running for ' ..
+                            'this bot, or a webhook is still set. stop the other instance or call ' ..
+                            'api.delete_webhook().')
+                    elseif api.debug then
                         print('Polling returned no result, backing off ' .. backoff .. 's')
                     end
                     copas.sleep(backoff)

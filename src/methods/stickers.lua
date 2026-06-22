@@ -2,6 +2,7 @@
 -- @module telegram-bot-lua.methods.stickers
 return function(api)
     local json = require('dkjson')
+    local function json_enc(v) return type(v) == 'table' and json.encode(v) or v end
     local config = require('telegram-bot-lua.config')
 
     --- send a static, animated, or video sticker.
@@ -23,9 +24,11 @@ return function(api)
         local success, res = api.request(config.endpoint .. api.token .. '/sendSticker', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
             ['emoji'] = opts.emoji,
             ['disable_notification'] = opts.disable_notification,
             ['protect_content'] = opts.protect_content,
+            ['suggested_post_parameters'] = json_enc(opts.suggested_post_parameters),
             ['reply_parameters'] = reply_parameters,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id,

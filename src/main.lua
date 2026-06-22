@@ -9,15 +9,17 @@
                        __/ |
                       |___/
 
-      Version 3.6-0
+      Version 3.7-0
       Copyright (c) 2017-2026 Matthew Hesketh
       See LICENSE for details
 
 ]]
 
 --- telegram-bot-lua - a feature-filled telegram bot API library.
--- supports bot API 10.1 with full method coverage, middleware, async polling,
--- MCP server, adapters, and backward-compatible v2 shims.
+-- supports bot API 10.1 with full method coverage, a command router, sessions
+-- and conversations, a webhook receiver, flood-control retries, middleware,
+-- async polling, structured logging, an MCP server, adapters, and
+-- backward-compatible v2 shims.
 -- @module telegram-bot-lua
 -- @author Matthew Hesketh
 -- @license GPL-3
@@ -30,7 +32,7 @@ local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.6-0'
+api.version = '3.7-0'
 
 --- configure the bot with a token and optional debug mode.
 -- connects to the telegram API and retrieves bot info via getMe.
@@ -69,12 +71,16 @@ end
 -- @param file table optional file attachments keyed by type
 -- @return table|false the decoded JSON response, or false on failure
 -- @return string|table the HTTP status or error details
-function api.request(endpoint, parameters, file)
+function api._http_request(endpoint, parameters, file)
     assert(endpoint, 'You must specify an endpoint to make this request to!')
     parameters = parameters or {}
+    -- work on a shallow copy so we never mutate the caller's table; stringify
+    -- scalars for multipart encoding but leave tables (file parts) untouched.
+    local params = {}
     for k, v in pairs(parameters) do
-        parameters[k] = tostring(v)
+        params[k] = type(v) == 'table' and v or tostring(v)
     end
+    parameters = params
     if api.debug then
         local safe = {}
         for k, v in pairs(parameters) do safe[k] = v end
@@ -117,17 +123,17 @@ function api.request(endpoint, parameters, file)
         ['sink'] = ltn12.sink.table(response)
     })
     if not pok then
-        print('Connection error [' .. tostring(success) .. ']')
+        api.log.warn('connection error:', success)
         return false, success
     end
     if not success then
-        print('Connection error [' .. tostring(res) .. ']')
+        api.log.warn('connection error:', res)
         return false, res
     end
     local jstr = table.concat(response)
     local jdat = json.decode(jstr)
     if not jdat then
-        return false, res
+        return false, { ['ok'] = false, ['description'] = 'failed to decode API response', ['body'] = jstr }
     elseif not jdat.ok then
         if api.debug then
             local output = '\n' .. tostring(jdat.description) .. ' [' .. tostring(jdat.error_code) .. ']\n'
@@ -136,6 +142,85 @@ function api.request(endpoint, parameters, file)
         return false, jdat
     end
     return jdat, res
+end
+
+--- retry policy for api.request. honours telegram's 429 retry_after (required
+-- by the api) and retries transient connection failures with bounded
+-- exponential backoff; a normal 4xx api error is returned immediately.
+api.retry = {
+    ['enabled'] = true,
+    ['max_attempts'] = 3,
+    ['base_delay'] = 1,
+    ['max_delay'] = 30
+}
+
+-- default blocking sleeper; the async layer passes copas.sleep instead.
+local function blocking_sleep(seconds)
+    local ok, socket = pcall(require, 'socket')
+    if ok and socket and socket.sleep then
+        socket.sleep(seconds)
+    else
+        os.execute('sleep ' .. tostring(math.max(1, math.floor(seconds))))
+    end
+end
+
+-- classify a request error: 'rate_limit' (+ retry_after), 'transient', or 'fatal'.
+-- an api error with a numeric error_code other than 429 is fatal (not retried);
+-- 429 is rate-limited; string connection / json-decode errors are transient.
+local function classify_error(err)
+    if type(err) == 'table' and tonumber(err.error_code) then
+        if tonumber(err.error_code) == 429 then
+            local retry_after = err.parameters and tonumber(err.parameters.retry_after)
+            return 'rate_limit', retry_after
+        end
+        return 'fatal'
+    end
+    return 'transient'
+end
+
+--- run a request thunk under the retry policy in api.retry.
+-- @param thunk function a no-arg function returning (result, err) like api.request
+-- @param sleeper function optional sleep(seconds); defaults to a blocking sleep
+-- @return table|false result and error, identical to the thunk's contract
+function api._with_retry(thunk, sleeper)
+    sleeper = sleeper or blocking_sleep
+    if not (api.retry and api.retry.enabled) then
+        return thunk()
+    end
+    local max_attempts = tonumber(api.retry.max_attempts) or 3
+    local backoff = tonumber(api.retry.base_delay) or 1
+    local max_delay = tonumber(api.retry.max_delay) or 30
+    local attempt = 0
+    while true do
+        attempt = attempt + 1
+        local result, err = thunk()
+        if result then
+            return result, err
+        end
+        local kind, retry_after = classify_error(err)
+        if kind == 'fatal' or attempt >= max_attempts then
+            return result, err
+        end
+        if kind == 'rate_limit' then
+            sleeper(retry_after or backoff)
+        else
+            sleeper(backoff)
+            backoff = math.min(backoff * 2, max_delay)
+        end
+    end
+end
+
+--- send a request to the telegram bot API with the retry policy applied.
+-- wraps api._http_request; see api.retry to configure or disable retries.
+-- @param endpoint string the full API endpoint URL
+-- @param parameters table optional request parameters
+-- @param file table optional file attachments keyed by type
+-- @return table|false the decoded JSON response, or false on failure
+-- @return string|table the HTTP status or error details
+function api.request(endpoint, parameters, file)
+    return api._with_retry(function()
+        return api._http_request(endpoint, parameters, file)
+    end)
 end
 
 --- get basic information about the bot via getMe.
@@ -162,12 +247,15 @@ function api.close()
     return success, res
 end
 
--- Load all modules
+-- load all modules
+require('telegram-bot-lua.log')(api)
 require('telegram-bot-lua.middleware')(api)
 require('telegram-bot-lua.handlers')(api)
 require('telegram-bot-lua.builders')(api)
 require('telegram-bot-lua.builders_rich')(api)
 require('telegram-bot-lua.helpers')(api)
+require('telegram-bot-lua.session')(api)
+require('telegram-bot-lua.framework')(api)
 require('telegram-bot-lua.methods.updates')(api)
 require('telegram-bot-lua.methods.messages')(api)
 require('telegram-bot-lua.methods.chat')(api)
@@ -182,11 +270,13 @@ require('telegram-bot-lua.methods.bot')(api)
 require('telegram-bot-lua.methods.gifts')(api)
 require('telegram-bot-lua.methods.checklists')(api)
 require('telegram-bot-lua.methods.stories')(api)
+require('telegram-bot-lua.methods.business')(api)
 require('telegram-bot-lua.methods.suggested_posts')(api)
 require('telegram-bot-lua.methods.rich')(api)
 require('telegram-bot-lua.utils')(api)
 require('telegram-bot-lua.mcp')(api)
 require('telegram-bot-lua.async')(api)
+require('telegram-bot-lua.webhook')(api)
 require('telegram-bot-lua.adapters')(api)
 require('telegram-bot-lua.compat')(api)
 

@@ -62,10 +62,13 @@
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.chat.html">telegram-bot-lua.methods.chat</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
@@ -83,7 +86,9 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 
@@ -130,8 +135,12 @@ api.<span class="function-name">run</span>({ timeout = <span class="number">60</
 <h2>Key Features</h2>
 
 <ul>
-    <li>Full Bot API 10.1 coverage (messages, media, payments, stickers, forums, games, gifts, stories, rich messages, live photos, and more)</li>
+    <li>Full Bot API 10.1 coverage (messages, media, payments, stickers, forums, games, gifts, stories, business accounts, rich messages, live photos, and more)</li>
     <li><strong>Async-first architecture</strong> via copas: concurrent updates, parallel API calls, background tasks</li>
+    <li><strong>Framework layer</strong>: command router, conversations, and per-chat/user sessions</li>
+    <li><strong>Built-in webhook receiver</strong> with x-telegram-bot-api secret-token verification</li>
+    <li><strong>Automatic 429 / retry_after flood-control</strong> with bounded exponential backoff</li>
+    <li><strong>Structured logging and lightweight metrics</strong> with a configurable sink</li>
     <li><strong>Built-in adapters</strong>: SQLite, PostgreSQL, Redis, OpenAI, Anthropic (Claude), and SMTP email</li>
     <li><strong>Lua 5.1 - 5.5 support</strong> with automatic polyfills for bitwise operations and string.pack</li>
     <li>Clean opts-table pattern for all API methods</li>
@@ -151,6 +160,7 @@ api.<span class="function-name">run</span>({ timeout = <span class="number">60</
 | <a href="docs/handlers.md">Update Handlers</a> | All available update handler functions |
 | <a href="docs/methods.md">API Methods</a> | Complete method reference |
 | <a href="docs/builders.md">Builders</a> | Keyboards, inline results, and type constructors |
+| <a href="docs/framework.md">Framework</a> | Command router, sessions, conversations, webhooks, retries, logging |
 | <a href="docs/utilities.md">Utilities</a> | Formatting, command parsing, pagination, and tools |
 | <a href="docs/async.md">Async / Concurrency</a> | Concurrent updates, parallel calls, background tasks |
 | <a href="docs/adapters.md">Adapters</a> | Database, Redis, LLM, and email integrations |
@@ -170,7 +180,7 @@ db:<span class="function-name">execute</span>(<span class="string">'CREATE TABLE
 <span class="keyword">local</span> llm = api.llm.<span class="function-name">new</span>({
     provider = <span class="string">'anthropic'</span>,
     api_key = <span class="global">os</span>.<span class="function-name">getenv</span>(<span class="string">'ANTHROPIC_API_KEY'</span>),
-    model = <span class="string">'claude-sonnet-4-5-20250929'</span>,
+    model = <span class="string">'claude-sonnet-4-6'</span>,
 })
 
 <span class="keyword">function</span> api.<span class="function-name">on_message</span>(message)
@@ -207,10 +217,15 @@ api.<span class="function-name">run</span>({ timeout = <span class="number">60</
    polyfill.lua          -- Lua 5.1+ compatibility (bit ops, string.pack)
    async.lua             -- Copas-based concurrency module
    b64url.lua            -- Base64 URL encoding/decoding
+   log.lua               -- Structured logging and lightweight metrics
    tools.lua             -- Utility functions (formatting, file ops, etc.)
    handlers.lua          -- Update routing and on_* handler stubs (async-first)
    builders.lua          -- Keyboard, inline result, and type constructors
+   builders_rich.lua     -- Rich message builders (RichText/RichBlock DSL)
    helpers.lua           -- Member status check helpers
+   session.lua           -- Per-chat/user session store (pluggable backends)
+   framework.lua         -- Command router, rich ctx, and conversations
+   webhook.lua           -- Webhook receiver (process + turnkey copas server)
    utils.lua             -- Bot development utilities (fmt, commands, pagination)
    compat.lua            -- v2 backward compatibility layer
    adapters/
@@ -234,7 +249,9 @@ api.<span class="function-name">run</span>({ timeout = <span class="number">60</
      gifts.lua           -- Gift methods
      checklists.lua      -- Checklist methods
      stories.lua         -- Story methods
+     business.lua        -- Business account methods
      suggested_posts.lua -- Suggested post methods
+     rich.lua            -- Rich message methods (send_rich_message, drafts)
 </code></pre>
 
 
@@ -335,7 +352,7 @@ api.<span class="function-name">run</span>({ sync = <span class="keyword">true</
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
+<i style="float:right;">Last updated 2026-06-22 21:59:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

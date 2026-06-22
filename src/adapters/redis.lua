@@ -41,18 +41,26 @@ return function(api)
         local port = opts.port or 6379
 
         local socket = require('socket')
-        local sock = socket.tcp()
-        sock:settimeout(opts.timeout or 5)
 
-        local ok, err = sock:connect(host, port)
-        if not ok then
-            error('Failed to connect to Redis at ' .. host .. ':' .. port .. ': ' .. tostring(err))
+        -- open a fresh tcp socket to the server and wrap it for copas when
+        -- inside an async context. shared by the initial connect and reconnect.
+        local function open_socket()
+            local raw = socket.tcp()
+            raw:settimeout(opts.timeout or 5)
+            local ok, err = raw:connect(host, port)
+            if not ok then
+                return nil, err
+            end
+            if api.adapters.is_async() then
+                local copas = require('copas')
+                raw = copas.wrap(raw)
+            end
+            return raw
         end
 
-        -- Wrap with copas if in async context
-        if api.adapters.is_async() then
-            local copas = require('copas')
-            sock = copas.wrap(sock)
+        local sock, conn_err = open_socket()
+        if not sock then
+            error('Failed to connect to Redis at ' .. host .. ':' .. port .. ': ' .. tostring(conn_err))
         end
 
         local conn = {
@@ -118,31 +126,86 @@ return function(api)
             end
         end
 
-        -- Execute a raw Redis command and return the response
-        function conn:command(...)
-            local send_ok, send_err = send_command(self._sock, ...)
+        -- run a command once over a given socket without any reconnect logic.
+        -- returns (value, err, transport_failed) where transport_failed is true
+        -- when the socket itself looks dead (send/receive failed) rather than
+        -- the server returning a normal RESP error.
+        local function exec_once(sock_handle, ...)
+            local send_ok, send_err = send_command(sock_handle, ...)
             if not send_ok then
-                return nil, 'Redis send error: ' .. tostring(send_err)
+                return nil, 'Redis send error: ' .. tostring(send_err), true
             end
-            return read_response(self._sock)
+            local value, read_err = read_response(sock_handle)
+            -- a nil value with a read-error string means the receive failed,
+            -- which we treat as a dead socket worth a reconnect. a server-side
+            -- RESP error (e.g. wrong type) returns a non-transport message.
+            if value == nil and read_err and read_err:find('^Redis read error') then
+                return nil, read_err, true
+            end
+            return value, read_err
         end
 
-        -- Authenticate if password provided
-        if opts.password then
-            local auth_res, auth_err = conn:command('AUTH', opts.password)
-            if not auth_res then
-                sock:close()
-                error('Redis AUTH failed: ' .. tostring(auth_err))
+        -- replay the authentication and database selection on a fresh socket.
+        -- used both on initial connect and after a reconnect so the new socket
+        -- ends up in the same logical state as the old one.
+        local function authenticate(sock_handle)
+            if opts.password then
+                local auth_res, auth_err = exec_once(sock_handle, 'AUTH', opts.password)
+                if not auth_res then
+                    return false, 'Redis AUTH failed: ' .. tostring(auth_err)
+                end
             end
+            if opts.db and opts.db ~= 0 then
+                local sel_res, sel_err = exec_once(sock_handle, 'SELECT', opts.db)
+                if not sel_res then
+                    return false, 'Redis SELECT failed: ' .. tostring(sel_err)
+                end
+            end
+            return true
         end
 
-        -- Select database if specified
-        if opts.db and opts.db ~= 0 then
-            local sel_res, sel_err = conn:command('SELECT', opts.db)
-            if not sel_res then
-                sock:close()
-                error('Redis SELECT failed: ' .. tostring(sel_err))
+        -- tear down the dead socket and open a new authenticated one, retaining
+        -- the same db/auth state. returns true on success.
+        local function reconnect(self)
+            if self._sock then
+                pcall(function() self._sock:close() end)
             end
+            local new_sock, open_err = open_socket()
+            if not new_sock then
+                return false, open_err
+            end
+            local auth_ok, auth_err = authenticate(new_sock)
+            if not auth_ok then
+                pcall(function() new_sock:close() end)
+                return false, auth_err
+            end
+            self._sock = new_sock
+            return true
+        end
+
+        -- execute a raw redis command. if the socket is found dead, attempt a
+        -- single reconnect (re-running the connect path) and retry the command
+        -- once before giving up.
+        function conn:command(...)
+            if not self._sock then
+                return nil, 'Redis connection is closed'
+            end
+            local value, cmd_err, transport_failed = exec_once(self._sock, ...)
+            if transport_failed then
+                local ok_reconnect = reconnect(self)
+                if not ok_reconnect then
+                    return nil, cmd_err
+                end
+                return exec_once(self._sock, ...)
+            end
+            return value, cmd_err
+        end
+
+        -- authenticate and select the database on the initial connection.
+        local init_ok, init_err = authenticate(conn._sock)
+        if not init_ok then
+            conn._sock:close()
+            error(init_err)
         end
 
         -- String commands --
@@ -214,6 +277,46 @@ return function(api)
 
         function conn:keys(pattern)
             return self:command('KEYS', pattern or '*')
+        end
+
+        -- one SCAN step. returns (next_cursor, keys_table). the cursor is a
+        -- string; iteration is complete once it comes back as '0'. opts may
+        -- carry a match pattern and a count hint.
+        function conn:scan(cursor, scan_opts)
+            scan_opts = scan_opts or {}
+            local args = { 'SCAN', cursor or '0' }
+            if scan_opts.match then
+                args[#args + 1] = 'MATCH'
+                args[#args + 1] = scan_opts.match
+            end
+            if scan_opts.count then
+                args[#args + 1] = 'COUNT'
+                args[#args + 1] = scan_opts.count
+            end
+            local result, err = self:command((table.unpack or unpack)(args))
+            if not result then
+                return nil, err
+            end
+            -- SCAN replies with [next_cursor, [key, ...]]
+            return tostring(result[1]), result[2] or {}
+        end
+
+        -- non-blocking alternative to keys('*'): iterates SCAN until the cursor
+        -- returns to '0' and collects every matching key.
+        function conn:scan_all(pattern)
+            local found = {}
+            local cursor = '0'
+            repeat
+                local next_cursor, batch = self:scan(cursor, { match = pattern })
+                if not next_cursor then
+                    return nil, batch
+                end
+                for _, key in ipairs(batch) do
+                    found[#found + 1] = key
+                end
+                cursor = next_cursor
+            until cursor == '0'
+            return found
         end
 
         function conn:type(key)

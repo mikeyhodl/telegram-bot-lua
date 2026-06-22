@@ -99,6 +99,9 @@ return function(api)
     --- called when a managed bot update is received.
     -- @param managed_bot table the managed bot updated object
     function api.on_managed_bot(_) end
+    --- called when the bot receives a guest message (Bot API 10.0).
+    -- @param guest_message table the guest message update object
+    function api.on_guest_message(_) end
 
     --- raw dispatch: routes an update directly to the appropriate handler.
     -- called by the middleware chain as the final step, or directly when
@@ -107,6 +110,11 @@ return function(api)
     -- @return any the return value of the matched handler
     function api._dispatch_update(update)
         api.on_update(update)
+        -- framework layer (commands, hears, conversations) runs first; if it
+        -- fully handles the update the legacy on_* handlers are skipped.
+        if api._framework_handle and api._framework_handle(update) then
+            return true
+        end
         if update.message then
             if update.message.chat.type == 'private' then
                 api.on_private_message(update.message)
@@ -169,6 +177,8 @@ return function(api)
             return api.on_purchased_paid_media(update.purchased_paid_media)
         elseif update.managed_bot then
             return api.on_managed_bot(update.managed_bot)
+        elseif update.guest_message then
+            return api.on_guest_message(update.guest_message)
         end
         return false
     end
@@ -235,7 +245,7 @@ return function(api)
             end
         end
         while api._sync_running do
-            local pok, updates = pcall(api.get_updates, {
+            local pok, updates, perr = pcall(api.get_updates, {
                 timeout = timeout,
                 offset = offset,
                 limit = limit,
@@ -250,14 +260,25 @@ return function(api)
                 backoff = math.min(backoff * 2, max_backoff)
             elseif updates and type(updates) == 'table' and updates.result then
                 backoff = 1
-                for _, v in pairs(updates.result) do
-                    api.process_update(v)
+                for _, v in ipairs(updates.result) do
+                    -- protect the loop: a throwing handler must not kill the bot.
+                    local ok, err = pcall(api.process_update, v)
+                    if not ok and api.debug then
+                        print('Update handler error: ' .. tostring(err))
+                    end
                     offset = v.update_id + 1
+                    if api.metrics then api.metrics.incr('updates') end
                 end
             else
                 -- get_updates returned false or a malformed payload. back off
-                -- so a sustained server-side error doesn't pin a cpu.
-                if api.debug then
+                -- so a sustained server-side error doesn't pin a cpu. a 409 is a
+                -- configuration error (duplicate poller / webhook still set),
+                -- not transient, so surface it loudly.
+                if type(perr) == 'table' and tonumber(perr.error_code) == 409 then
+                    api.log.warn('polling conflict (409): another getUpdates is running for this ' ..
+                        'bot, or a webhook is still set. stop the other instance or call ' ..
+                        'api.delete_webhook().')
+                elseif api.debug then
                     print('Polling returned no result, backing off ' .. backoff .. 's')
                 end
                 sleeper(backoff)
