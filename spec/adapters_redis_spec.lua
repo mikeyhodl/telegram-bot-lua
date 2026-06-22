@@ -1,14 +1,25 @@
 local api = require('spec.test_helper')
 
--- Redis tests require a running Redis server.
--- They are skipped if Redis is not available.
+-- redis tests require a running redis server.
+-- they are skipped if redis is not available.
+-- TCP reachability alone is insufficient: a server started with `requirepass`
+-- accepts the connection but rejects every command with NOAUTH, which would
+-- let the integration tests activate and then fail on the first command. we
+-- therefore verify the server actually answers a PING with +PONG before
+-- treating it as usable for the (unauthenticated) integration suite.
 local function redis_available()
     local socket = require('socket')
     local sock = socket.tcp()
     sock:settimeout(1)
     local ok = sock:connect('127.0.0.1', 6379)
+    if not ok then
+        sock:close()
+        return false
+    end
+    sock:send('PING\r\n')
+    local line = sock:receive('*l')
     sock:close()
-    return ok
+    return line ~= nil and line:sub(1, 5) == '+PONG'
 end
 
 describe('redis adapter', function()

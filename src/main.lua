@@ -9,14 +9,14 @@
                        __/ |
                       |___/
 
-      Version 3.5-0
+      Version 3.6-0
       Copyright (c) 2017-2026 Matthew Hesketh
       See LICENSE for details
 
 ]]
 
 --- telegram-bot-lua - a feature-filled telegram bot API library.
--- supports bot API 9.6 with full method coverage, middleware, async polling,
+-- supports bot API 10.1 with full method coverage, middleware, async polling,
 -- MCP server, adapters, and backward-compatible v2 shims.
 -- @module telegram-bot-lua
 -- @author Matthew Hesketh
@@ -30,7 +30,7 @@ local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.5-0'
+api.version = '3.6-0'
 
 --- configure the bot with a token and optional debug mode.
 -- connects to the telegram API and retrieves bot info via getMe.
@@ -166,6 +166,7 @@ end
 require('telegram-bot-lua.middleware')(api)
 require('telegram-bot-lua.handlers')(api)
 require('telegram-bot-lua.builders')(api)
+require('telegram-bot-lua.builders_rich')(api)
 require('telegram-bot-lua.helpers')(api)
 require('telegram-bot-lua.methods.updates')(api)
 require('telegram-bot-lua.methods.messages')(api)
@@ -182,6 +183,7 @@ require('telegram-bot-lua.methods.gifts')(api)
 require('telegram-bot-lua.methods.checklists')(api)
 require('telegram-bot-lua.methods.stories')(api)
 require('telegram-bot-lua.methods.suggested_posts')(api)
+require('telegram-bot-lua.methods.rich')(api)
 require('telegram-bot-lua.utils')(api)
 require('telegram-bot-lua.mcp')(api)
 require('telegram-bot-lua.async')(api)

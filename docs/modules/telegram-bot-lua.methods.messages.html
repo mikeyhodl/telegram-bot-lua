@@ -48,6 +48,7 @@
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
   <li><a href="../modules/telegram-bot-lua.async.html">telegram-bot-lua.async</a></li>
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
+  <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
@@ -63,6 +64,7 @@
   <li><strong>telegram-bot-lua.methods.messages</strong></li>
   <li><a href="../modules/telegram-bot-lua.methods.passport.html">telegram-bot-lua.methods.passport</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.payments.html">telegram-bot-lua.methods.payments</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.rich.html">telegram-bot-lua.methods.rich</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stickers.html">telegram-bot-lua.methods.stickers</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stories.html">telegram-bot-lua.methods.stories</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.suggested_posts.html">telegram-bot-lua.methods.suggested_posts</a></li>
@@ -99,6 +101,14 @@
 	<td class="summary">copy multiple messages from one chat to another, without a link to the original messages.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.delete_all_message_reactions">api.delete_all_message_reactions(chat_id, opts)</a></td>
+	<td class="summary">remove all reactions in a chat that were added by a given user or chat.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.delete_message_reaction">api.delete_message_reaction(chat_id, message_id, opts)</a></td>
+	<td class="summary">remove a specific reaction from a message.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.forward_message">api.forward_message(chat_id, from_chat_id, message_id, opts)</a></td>
 	<td class="summary">forward a message from one chat to another.</td>
 	</tr>
@@ -129,6 +139,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.send_document">api.send_document(chat_id, document, opts)</a></td>
 	<td class="summary">send a general file (document) to a chat.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.send_live_photo">api.send_live_photo(chat_id, live_photo, photo, opts)</a></td>
+	<td class="summary">send a live photo (a static photo paired with a short video) to a chat.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.send_location">api.send_location(chat_id, latitude, longitude, opts)</a></td>
@@ -268,6 +282,77 @@
         </li>
         <li><span class="parameter">remove_caption</span>
          boolean pass true to remove captions from the copied messages
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.delete_all_message_reactions"></a>
+    <strong>api.delete_all_message_reactions(chat_id, opts)</strong>
+    </dt>
+    <dd>
+    remove all reactions in a chat that were added by a given user or chat.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target supergroup
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">user_id</span>
+         number identifier of the user whose reactions will be removed
+        </li>
+        <li><span class="parameter">actor_chat_id</span>
+         number identifier of the chat whose reactions will be removed
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.delete_message_reaction"></a>
+    <strong>api.delete_message_reaction(chat_id, message_id, opts)</strong>
+    </dt>
+    <dd>
+    remove a specific reaction from a message.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target supergroup
+        </li>
+        <li><span class="parameter">message_id</span>
+         number identifier of the target message
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">user_id</span>
+         number identifier of the user whose reaction will be removed
+        </li>
+        <li><span class="parameter">actor_chat_id</span>
+         number identifier of the chat whose reaction will be removed
         </li>
         </li></ul>
     </ul>
@@ -639,6 +724,61 @@
         </li>
         <li><span class="parameter">reply_parameters</span>
          table description of the message to reply to
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.send_live_photo"></a>
+    <strong>api.send_live_photo(chat_id, live_photo, photo, opts)</strong>
+    </dt>
+    <dd>
+    send a live photo (a static photo paired with a short video) to a chat.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target channel
+        </li>
+        <li><span class="parameter">live_photo</span>
+         string|file the live photo video (file_id or upload); urls are unsupported
+        </li>
+        <li><span class="parameter">photo</span>
+         string|file the static photo (file_id or upload); urls are unsupported
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">caption</span>
+         string caption for the live photo
+        </li>
+        <li><span class="parameter">parse_mode</span>
+         string mode for parsing entities in the caption
+        </li>
+        <li><span class="parameter">has_spoiler</span>
+         boolean cover the live photo with a spoiler animation
+        </li>
+        <li><span class="parameter">show_caption_above_media</span>
+         boolean show the caption above the media
+        </li>
+        <li><span class="parameter">reply_markup</span>
+         table additional interface options
+        </li>
+        <li><span class="parameter">reply_parameters</span>
+         table description of the message to reply to
+        </li>
+        <li><span class="parameter">disable_notification</span>
+         boolean send the message silently
         </li>
         </li></ul>
     </ul>
@@ -1252,7 +1392,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-04-07 21:37:15 </i>
+<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
