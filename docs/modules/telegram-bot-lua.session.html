@@ -42,7 +42,7 @@
   <li><a href="../modules/b64url.html">b64url</a></li>
   <li><a href="../modules/telegram-bot-lua.html">telegram-bot-lua</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.html">telegram-bot-lua.adapters</a></li>
-  <li><strong>telegram-bot-lua.adapters.db</strong></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.db.html">telegram-bot-lua.adapters.db</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.email.html">telegram-bot-lua.adapters.email</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.llm.html">telegram-bot-lua.adapters.llm</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
@@ -74,7 +74,7 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
-  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
+  <li><strong>telegram-bot-lua.session</strong></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
   <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
@@ -88,16 +88,37 @@
 
 <div id="content">
 
-<h1>Module <code>telegram-bot-lua.adapters.db</code></h1>
-<p>database adapter supporting SQLite and PostgreSQL.</p>
-<p>[[</p>
+<h1>Module <code>telegram-bot-lua.session</code></h1>
+<p>per-chat/user session store with pluggable backends.</p>
+<p> the default backend is in-memory; api.session.use(backend) swaps it for a
+ redis- or db-backed one (a table with get/set/clear(self, key) methods).</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#api.db.connect">api.db.connect(opts)</a></td>
-	<td class="summary">create a database connection.</td>
+	<td class="name" nowrap><a href="#api.session.clear">api.session.clear(obj)</a></td>
+	<td class="summary">clear the session for the chat/user.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.session.get">api.session.get(obj)</a></td>
+	<td class="summary">get the session table for the chat/user in an update.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.session.key">api.session.key(obj)</a></td>
+	<td class="summary">the stable session key (chat:user) for an update or payload.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.session.memory">api.session.memory()</a></td>
+	<td class="summary">create an in-memory session backend.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.session.set">api.session.set(obj, value)</a></td>
+	<td class="summary">replace the session value for the chat/user.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.session.use">api.session.use(backend)</a></td>
+	<td class="summary">replace the session backend.</td>
 	</tr>
 </table>
 
@@ -109,46 +130,129 @@
 
     <dl class="function">
     <dt>
-    <a name = "api.db.connect"></a>
-    <strong>api.db.connect(opts)</strong>
+    <a name = "api.session.clear"></a>
+    <strong>api.session.clear(obj)</strong>
     </dt>
     <dd>
-    create a database connection.
+    clear the session for the chat/user.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">opts</span> table connection options
-        <ul>
-        <li><span class="parameter">driver</span>
-         string database driver: 'sqlite' or 'postgres'
+        <li><span class="parameter">obj</span>
+
+
+
         </li>
-        <li><span class="parameter">path</span>
-         string SQLite database file path (sqlite only)
-        </li>
-        <li><span class="parameter">host</span>
-         string PostgreSQL host (postgres only)
-        </li>
-        <li><span class="parameter">port</span>
-         number PostgreSQL port (postgres only)
-        </li>
-        <li><span class="parameter">database</span>
-         string PostgreSQL database name (postgres only)
-        </li>
-        <li><span class="parameter">user</span>
-         string PostgreSQL username (postgres only)
-        </li>
-        <li><span class="parameter">password</span>
-         string PostgreSQL password (postgres only)
-        </li>
-        </li></ul>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
 
-        table connection object with execute, query, close methods
-    </ol>
+
+
+
+</dd>
+    <dt>
+    <a name = "api.session.get"></a>
+    <strong>api.session.get(obj)</strong>
+    </dt>
+    <dd>
+    get the session table for the chat/user in an update.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.session.key"></a>
+    <strong>api.session.key(obj)</strong>
+    </dt>
+    <dd>
+    the stable session key (chat:user) for an update or payload.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.session.memory"></a>
+    <strong>api.session.memory()</strong>
+    </dt>
+    <dd>
+    create an in-memory session backend.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.session.set"></a>
+    <strong>api.session.set(obj, value)</strong>
+    </dt>
+    <dd>
+    replace the session value for the chat/user.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+
+
+
+        </li>
+        <li><span class="parameter">value</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.session.use"></a>
+    <strong>api.session.use(backend)</strong>
+    </dt>
+    <dd>
+    replace the session backend.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">backend</span>
+
+
+
+        </li>
+    </ul>
+
 
 
 

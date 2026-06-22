@@ -34,6 +34,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -42,7 +43,7 @@
   <li><a href="../modules/b64url.html">b64url</a></li>
   <li><a href="../modules/telegram-bot-lua.html">telegram-bot-lua</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.html">telegram-bot-lua.adapters</a></li>
-  <li><strong>telegram-bot-lua.adapters.db</strong></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.db.html">telegram-bot-lua.adapters.db</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.email.html">telegram-bot-lua.adapters.email</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.llm.html">telegram-bot-lua.adapters.llm</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
@@ -53,7 +54,7 @@
   <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
-  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
+  <li><strong>telegram-bot-lua.log</strong></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
@@ -88,16 +89,41 @@
 
 <div id="content">
 
-<h1>Module <code>telegram-bot-lua.adapters.db</code></h1>
-<p>database adapter supporting SQLite and PostgreSQL.</p>
-<p>[[</p>
+<h1>Module <code>telegram-bot-lua.log</code></h1>
+<p>structured logging and lightweight metrics.</p>
+<p> api.log.{debug,info,warn,error} emit through a configurable sink with level
+ filtering; api.metrics holds simple named counters. both are opt-in to
+ configure and have sensible defaults (level 'info', sink = print).</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#api.db.connect">api.db.connect(opts)</a></td>
-	<td class="summary">create a database connection.</td>
+	<td class="name" nowrap><a href="#api.log.sink">api.log.sink(level, message)</a></td>
+	<td class="summary">the sink receives (level, message); replace to route logs elsewhere.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.metrics.all">api.metrics.all()</a></td>
+	<td class="summary">a shallow copy of all counters.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.metrics.get">api.metrics.get(name)</a></td>
+	<td class="summary">read a single counter (0 if unset).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.metrics.incr">api.metrics.incr(name, by)</a></td>
+	<td class="summary">increment a named counter by <code>by</code> (default 1).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.metrics.reset">api.metrics.reset()</a></td>
+	<td class="summary">reset all counters to zero.</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#api.log.level">api.log.level</a></td>
+	<td class="summary">minimum level to emit; one of 'debug', 'info', 'warn', 'error'.</td>
 	</tr>
 </table>
 
@@ -109,46 +135,122 @@
 
     <dl class="function">
     <dt>
-    <a name = "api.db.connect"></a>
-    <strong>api.db.connect(opts)</strong>
+    <a name = "api.log.sink"></a>
+    <strong>api.log.sink(level, message)</strong>
     </dt>
     <dd>
-    create a database connection.
+    the sink receives (level, message); replace to route logs elsewhere.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">opts</span> table connection options
-        <ul>
-        <li><span class="parameter">driver</span>
-         string database driver: 'sqlite' or 'postgres'
+        <li><span class="parameter">level</span>
+
+
+
         </li>
-        <li><span class="parameter">path</span>
-         string SQLite database file path (sqlite only)
+        <li><span class="parameter">message</span>
+
+
+
         </li>
-        <li><span class="parameter">host</span>
-         string PostgreSQL host (postgres only)
-        </li>
-        <li><span class="parameter">port</span>
-         number PostgreSQL port (postgres only)
-        </li>
-        <li><span class="parameter">database</span>
-         string PostgreSQL database name (postgres only)
-        </li>
-        <li><span class="parameter">user</span>
-         string PostgreSQL username (postgres only)
-        </li>
-        <li><span class="parameter">password</span>
-         string PostgreSQL password (postgres only)
-        </li>
-        </li></ul>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
 
-        table connection object with execute, query, close methods
-    </ol>
+
+
+
+</dd>
+    <dt>
+    <a name = "api.metrics.all"></a>
+    <strong>api.metrics.all()</strong>
+    </dt>
+    <dd>
+    a shallow copy of all counters.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.metrics.get"></a>
+    <strong>api.metrics.get(name)</strong>
+    </dt>
+    <dd>
+    read a single counter (0 if unset).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.metrics.incr"></a>
+    <strong>api.metrics.incr(name, by)</strong>
+    </dt>
+    <dd>
+    increment a named counter by <code>by</code> (default 1).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+
+
+        </li>
+        <li><span class="parameter">by</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.metrics.reset"></a>
+    <strong>api.metrics.reset()</strong>
+    </dt>
+    <dd>
+    reset all counters to zero.
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "api.log.level"></a>
+    <strong>api.log.level</strong>
+    </dt>
+    <dd>
+    minimum level to emit; one of 'debug', 'info', 'warn', 'error'.
+
+
+
 
 
 

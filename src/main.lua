@@ -9,15 +9,17 @@
                        __/ |
                       |___/
 
-      Version 3.6-0
+      Version 3.7-0
       Copyright (c) 2017-2026 Matthew Hesketh
       See LICENSE for details
 
 ]]
 
 --- telegram-bot-lua - a feature-filled telegram bot API library.
--- supports bot API 10.1 with full method coverage, middleware, async polling,
--- MCP server, adapters, and backward-compatible v2 shims.
+-- supports bot API 10.1 with full method coverage, a command router, sessions
+-- and conversations, a webhook receiver, flood-control retries, middleware,
+-- async polling, structured logging, an MCP server, adapters, and
+-- backward-compatible v2 shims.
 -- @module telegram-bot-lua
 -- @author Matthew Hesketh
 -- @license GPL-3
@@ -30,7 +32,7 @@ local ltn12 = require('ltn12')
 local json = require('dkjson')
 local config = require('telegram-bot-lua.config')
 
-api.version = '3.6-0'
+api.version = '3.7-0'
 
 --- configure the bot with a token and optional debug mode.
 -- connects to the telegram API and retrieves bot info via getMe.

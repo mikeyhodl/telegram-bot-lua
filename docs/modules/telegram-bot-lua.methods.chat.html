@@ -50,10 +50,13 @@
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
   <li><strong>telegram-bot-lua.methods.chat</strong></li>
   <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
@@ -71,7 +74,9 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 <h2>Topics</h2>
@@ -105,6 +110,10 @@
 	<td class="summary">create an additional invite link for a chat.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.create_chat_subscription_invite_link">api.create_chat_subscription_invite_link(chat_id, subscription_period, subscription_price, opts)</a></td>
+	<td class="summary">create a subscription invite link for a channel chat.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.decline_chat_join_request">api.decline_chat_join_request(chat_id, user_id)</a></td>
 	<td class="summary">decline a chat join request.</td>
 	</tr>
@@ -119,6 +128,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.edit_chat_invite_link">api.edit_chat_invite_link(chat_id, invite_link, opts)</a></td>
 	<td class="summary">edit a non-primary invite link created by the bot.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.edit_chat_subscription_invite_link">api.edit_chat_subscription_invite_link(chat_id, invite_link, opts)</a></td>
+	<td class="summary">edit a subscription invite link created by the bot.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.export_chat_invite_link">api.export_chat_invite_link(chat_id)</a></td>
@@ -294,6 +307,43 @@
 
 </dd>
     <dt>
+    <a name = "api.create_chat_subscription_invite_link"></a>
+    <strong>api.create_chat_subscription_invite_link(chat_id, subscription_period, subscription_price, opts)</strong>
+    </dt>
+    <dd>
+    create a subscription invite link for a channel chat.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target channel chat or username of the target channel
+        </li>
+        <li><span class="parameter">subscription_period</span>
+         number the number of seconds the subscription will be active before the next payment
+        </li>
+        <li><span class="parameter">subscription_price</span>
+         number the amount of telegram stars a user must pay to be a member of the chat; 1-10000
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">name</span>
+         string invite link name (max 32 characters)
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.decline_chat_join_request"></a>
     <strong>api.decline_chat_join_request(chat_id, user_id)</strong>
     </dt>
@@ -400,6 +450,40 @@
         </li>
         <li><span class="parameter">creates_join_request</span>
          boolean true if users joining via the link need to be approved
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.edit_chat_subscription_invite_link"></a>
+    <strong>api.edit_chat_subscription_invite_link(chat_id, invite_link, opts)</strong>
+    </dt>
+    <dd>
+    edit a subscription invite link created by the bot.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_id</span>
+         number|string unique identifier for the target chat or username of the target channel
+        </li>
+        <li><span class="parameter">invite_link</span>
+         string the invite link to edit
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">name</span>
+         string invite link name (max 32 characters)
         </li>
         </li></ul>
     </ul>
@@ -906,7 +990,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
+<i style="float:right;">Last updated 2026-06-22 21:59:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

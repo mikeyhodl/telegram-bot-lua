@@ -50,10 +50,13 @@
   <li><strong>telegram-bot-lua.builders</strong></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
+  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
+  <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
   <li><a href="../modules/telegram-bot-lua.mcp.html">telegram-bot-lua.mcp</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.bot.html">telegram-bot-lua.methods.bot</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.business.html">telegram-bot-lua.methods.business</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.chat.html">telegram-bot-lua.methods.chat</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.checklists.html">telegram-bot-lua.methods.checklists</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.forum.html">telegram-bot-lua.methods.forum</a></li>
@@ -71,7 +74,9 @@
   <li><a href="../modules/telegram-bot-lua.methods.updates.html">telegram-bot-lua.methods.updates</a></li>
   <li><a href="../modules/telegram-bot-lua.middleware.html">telegram-bot-lua.middleware</a></li>
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
+  <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
+  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 <h2>Topics</h2>
@@ -101,12 +106,24 @@
 	<td class="summary">create a standalone callback game inline keyboard button.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.copy_text_button">api.copy_text_button(text, copy_text)</a></td>
+	<td class="summary">create a copy text button for an inline keyboard.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.inline_keyboard">api.inline_keyboard()</a></td>
 	<td class="summary">create an inline keyboard markup with a chainable builder pattern.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.inline_keyboard_meta:row">api.inline_keyboard_meta:row(row)</a></td>
 	<td class="summary">add a row of buttons to the inline keyboard.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_checklist">api.input_checklist(title, tasks, opts)</a></td>
+	<td class="summary">create an input checklist object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_checklist_task">api.input_checklist_task(id, text, opts)</a></td>
+	<td class="summary">create an input checklist task object.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.input_media_link">api.input_media_link(url)</a></td>
@@ -141,8 +158,60 @@
 	<td class="summary">create an input paid media live photo object (Bot API 10.0).</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.input_paid_media_photo">api.input_paid_media_photo(media)</a></td>
+	<td class="summary">create an input paid media photo object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_paid_media_video">api.input_paid_media_video(media, opts)</a></td>
+	<td class="summary">create an input paid media video object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_poll_option">api.input_poll_option(text, opts)</a></td>
+	<td class="summary">create an input poll option object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_profile_photo_animated">api.input_profile_photo_animated(animation, opts)</a></td>
+	<td class="summary">create an input profile photo animated object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_profile_photo_static">api.input_profile_photo_static(photo)</a></td>
+	<td class="summary">create an input profile photo static object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_story_content_photo">api.input_story_content_photo(photo)</a></td>
+	<td class="summary">create an input story content photo object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_story_content_video">api.input_story_content_video(video, opts)</a></td>
+	<td class="summary">create an input story content video object.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.keyboard">api.keyboard(resize_keyboard, one_time_keyboard, selective)</a></td>
 	<td class="summary">create a reply keyboard markup with a chainable builder pattern.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_request_chat">api.keyboard_button_request_chat(text, request_id, chat_is_channel, opts)</a></td>
+	<td class="summary">create a keyboard button that requests a chat when pressed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_request_contact">api.keyboard_button_request_contact(text)</a></td>
+	<td class="summary">create a keyboard button that requests the user's contact when pressed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_request_location">api.keyboard_button_request_location(text)</a></td>
+	<td class="summary">create a keyboard button that requests the user's location when pressed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_request_poll">api.keyboard_button_request_poll(text, poll_type)</a></td>
+	<td class="summary">create a keyboard button that asks the user to create a poll when pressed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_request_users">api.keyboard_button_request_users(text, request_id, opts)</a></td>
+	<td class="summary">create a keyboard button that requests users when pressed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.keyboard_button_web_app">api.keyboard_button_web_app(text, url)</a></td>
+	<td class="summary">create a keyboard button that launches a web app when pressed.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.keyboard_meta:row">api.keyboard_meta:row(row)</a></td>
@@ -151,6 +220,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.labeled_price">api.labeled_price(label, amount, encoded)</a></td>
 	<td class="summary">create a standalone labelled price object for payment invoices.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.login_url">api.login_url(url, opts)</a></td>
+	<td class="summary">create a login url object for an inline keyboard button.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.mask_position">api.mask_position()</a></td>
@@ -171,6 +244,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.prices_meta:labeled_price">api.prices_meta:labeled_price(label, amount)</a></td>
 	<td class="summary">add a labelled price to the prices array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.reaction_type_paid">api.reaction_type_paid()</a></td>
+	<td class="summary">create a paid reaction type object.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.remove_keyboard">api.remove_keyboard(selective)</a></td>
@@ -292,6 +369,34 @@
 
 </dd>
     <dt>
+    <a name = "api.copy_text_button"></a>
+    <strong>api.copy_text_button(text, copy_text)</strong>
+    </dt>
+    <dd>
+    create a copy text button for an inline keyboard.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">copy_text</span>
+         string the text to be copied to the clipboard; 1-256 characters
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table an inline keyboard button object with a copy_text field
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.inline_keyboard"></a>
     <strong>api.inline_keyboard()</strong>
     </dt>
@@ -329,6 +434,68 @@
     <ol>
 
         table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_checklist"></a>
+    <strong>api.input_checklist(title, tasks, opts)</strong>
+    </dt>
+    <dd>
+    create an input checklist object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">title</span>
+         string title of the checklist, 1-255 characters
+        </li>
+        <li><span class="parameter">tasks</span>
+         table array of input checklist task objects, 1-30 tasks
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional parse<em>mode, title</em>entities, others<em>can</em>add<em>tasks, others</em>can<em>mark</em>tasks<em>as</em>done
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input checklist object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_checklist_task"></a>
+    <strong>api.input_checklist_task(id, text, opts)</strong>
+    </dt>
+    <dd>
+    create an input checklist task object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+         number unique positive identifier of the task
+        </li>
+        <li><span class="parameter">text</span>
+         string text of the task, 1-100 characters
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional parse<em>mode, text</em>entities
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input checklist task object
     </ol>
 
 
@@ -593,6 +760,193 @@
 
 </dd>
     <dt>
+    <a name = "api.input_paid_media_photo"></a>
+    <strong>api.input_paid_media_photo(media)</strong>
+    </dt>
+    <dd>
+    create an input paid media photo object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id, url, or attach reference for the photo
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input paid media object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_paid_media_video"></a>
+    <strong>api.input_paid_media_video(media, opts)</strong>
+    </dt>
+    <dd>
+    create an input paid media video object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id, url, or attach reference for the video
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional thumbnail, cover, start<em>timestamp, width, height, duration, supports</em>streaming
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input paid media object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_poll_option"></a>
+    <strong>api.input_poll_option(text, opts)</strong>
+    </dt>
+    <dd>
+    create an input poll option object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string option text, 1-100 characters
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional text<em>parse</em>mode, text_entities, media
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input poll option object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_profile_photo_animated"></a>
+    <strong>api.input_profile_photo_animated(animation, opts)</strong>
+    </dt>
+    <dd>
+    create an input profile photo animated object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">animation</span>
+         string the animated profile photo; file_id, url, or attach reference
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional main<em>frame</em>timestamp
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input profile photo object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_profile_photo_static"></a>
+    <strong>api.input_profile_photo_static(photo)</strong>
+    </dt>
+    <dd>
+    create an input profile photo static object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">photo</span>
+         string the static profile photo; file_id, url, or attach reference
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input profile photo object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_story_content_photo"></a>
+    <strong>api.input_story_content_photo(photo)</strong>
+    </dt>
+    <dd>
+    create an input story content photo object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">photo</span>
+         string the photo to post as a story; file_id, url, or attach reference
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input story content object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_story_content_video"></a>
+    <strong>api.input_story_content_video(video, opts)</strong>
+    </dt>
+    <dd>
+    create an input story content video object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">video</span>
+         string the video to post as a story; file_id, url, or attach reference
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional duration, cover<em>frame</em>timestamp, is_animation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input story content object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.keyboard"></a>
     <strong>api.keyboard(resize_keyboard, one_time_keyboard, selective)</strong>
     </dt>
@@ -617,6 +971,177 @@
     <ol>
 
         table a reply keyboard markup object with metatable for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_request_chat"></a>
+    <strong>api.keyboard_button_request_chat(text, request_id, chat_is_channel, opts)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that requests a chat when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">request_id</span>
+         number signed 32-bit identifier of the request, unique within the message
+        </li>
+        <li><span class="parameter">chat_is_channel</span>
+         boolean pass true to request a channel chat, false to request a group or supergroup
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional chat<em>is</em>forum, chat<em>has</em>username, chat<em>is</em>created, user<em>administrator</em>rights, bot<em>administrator</em>rights, bot<em>is</em>member, request<em>title, request</em>username, request_photo
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with a request_chat field
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_request_contact"></a>
+    <strong>api.keyboard_button_request_contact(text)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that requests the user's contact when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with request_contact set to true
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_request_location"></a>
+    <strong>api.keyboard_button_request_location(text)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that requests the user's location when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with request_location set to true
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_request_poll"></a>
+    <strong>api.keyboard_button_request_poll(text, poll_type)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that asks the user to create a poll when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">poll_type</span>
+         string optional "quiz", "regular", or nil for any type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with a request_poll field
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_request_users"></a>
+    <strong>api.keyboard_button_request_users(text, request_id, opts)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that requests users when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">request_id</span>
+         number signed 32-bit identifier of the request, unique within the message
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional user<em>is</em>bot, user<em>is</em>premium, max<em>quantity, request</em>name, request<em>username, request</em>photo
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with a request_users field
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.keyboard_button_web_app"></a>
+    <strong>api.keyboard_button_web_app(text, url)</strong>
+    </dt>
+    <dd>
+    create a keyboard button that launches a web app when pressed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">text</span>
+         string label text for the button
+        </li>
+        <li><span class="parameter">url</span>
+         string an https url of a web app to be opened
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a keyboard button object with a web_app field
     </ol>
 
 
@@ -673,6 +1198,34 @@
     <ol>
 
         table|string|boolean the labelled price object, json string if encoded, or false on invalid params
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.login_url"></a>
+    <strong>api.login_url(url, opts)</strong>
+    </dt>
+    <dd>
+    create a login url object for an inline keyboard button.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+         string an https url to be opened with user authorization data
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional forward<em>text, bot</em>username, request<em>write</em>access
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a login url object
     </ol>
 
 
@@ -804,6 +1357,25 @@
     <ol>
 
         table self for chaining
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.reaction_type_paid"></a>
+    <strong>api.reaction_type_paid()</strong>
+    </dt>
+    <dd>
+    create a paid reaction type object.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table a reaction type object with type "paid"
     </ol>
 
 
@@ -1152,7 +1724,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
+<i style="float:right;">Last updated 2026-06-22 21:59:03 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

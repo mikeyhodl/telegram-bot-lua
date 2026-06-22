@@ -42,7 +42,7 @@
   <li><a href="../modules/b64url.html">b64url</a></li>
   <li><a href="../modules/telegram-bot-lua.html">telegram-bot-lua</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.html">telegram-bot-lua.adapters</a></li>
-  <li><strong>telegram-bot-lua.adapters.db</strong></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.db.html">telegram-bot-lua.adapters.db</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.email.html">telegram-bot-lua.adapters.email</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.llm.html">telegram-bot-lua.adapters.llm</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
@@ -76,7 +76,7 @@
   <li><a href="../modules/telegram-bot-lua.polyfill.html">telegram-bot-lua.polyfill</a></li>
   <li><a href="../modules/telegram-bot-lua.session.html">telegram-bot-lua.session</a></li>
   <li><a href="../modules/telegram-bot-lua.utils.html">telegram-bot-lua.utils</a></li>
-  <li><a href="../modules/telegram-bot-lua.webhook.html">telegram-bot-lua.webhook</a></li>
+  <li><strong>telegram-bot-lua.webhook</strong></li>
   <li><a href="../modules/tools.html">tools</a></li>
 </ul>
 <h2>Topics</h2>
@@ -88,16 +88,27 @@
 
 <div id="content">
 
-<h1>Module <code>telegram-bot-lua.adapters.db</code></h1>
-<p>database adapter supporting SQLite and PostgreSQL.</p>
-<p>[[</p>
+<h1>Module <code>telegram-bot-lua.webhook</code></h1>
+<p>webhook receiver for incoming updates.</p>
+<p> two entry points: api.webhook.process (verify + dispatch a body you already
+ received via your own http server) and api.webhook.serve (a turnkey copas
+ http server). both verify the x-telegram-bot-api-secret-token when a secret
+ is configured.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#api.db.connect">api.db.connect(opts)</a></td>
-	<td class="summary">create a database connection.</td>
+	<td class="name" nowrap><a href="#api.webhook.process">api.webhook.process(body, opts)</a></td>
+	<td class="summary">verify a secret then dispatch an update body received from telegram.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.webhook.serve">api.webhook.serve(opts)</a></td>
+	<td class="summary">run a minimal copas http server that receives telegram webhooks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.webhook.verify_secret">api.webhook.verify_secret(received, expected)</a></td>
+	<td class="summary">check a received secret token against the expected one.</td>
 	</tr>
 </table>
 
@@ -109,45 +120,83 @@
 
     <dl class="function">
     <dt>
-    <a name = "api.db.connect"></a>
-    <strong>api.db.connect(opts)</strong>
+    <a name = "api.webhook.process"></a>
+    <strong>api.webhook.process(body, opts)</strong>
     </dt>
     <dd>
-    create a database connection.
+    verify a secret then dispatch an update body received from telegram.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">opts</span> table connection options
-        <ul>
-        <li><span class="parameter">driver</span>
-         string database driver: 'sqlite' or 'postgres'
+        <li><span class="parameter">body</span>
+         string|table raw JSON body, or an already-decoded update table
         </li>
-        <li><span class="parameter">path</span>
-         string SQLite database file path (sqlite only)
+        <li><span class="parameter">opts</span>
+         table optional { secret<em>token, received</em>secret }
         </li>
-        <li><span class="parameter">host</span>
-         string PostgreSQL host (postgres only)
-        </li>
-        <li><span class="parameter">port</span>
-         number PostgreSQL port (postgres only)
-        </li>
-        <li><span class="parameter">database</span>
-         string PostgreSQL database name (postgres only)
-        </li>
-        <li><span class="parameter">user</span>
-         string PostgreSQL username (postgres only)
-        </li>
-        <li><span class="parameter">password</span>
-         string PostgreSQL password (postgres only)
-        </li>
-        </li></ul>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        table connection object with execute, query, close methods
+        any|false the dispatch result, or false + reason on failure
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.webhook.serve"></a>
+    <strong>api.webhook.serve(opts)</strong>
+    </dt>
+    <dd>
+    run a minimal copas http server that receives telegram webhooks.
+ pass { no_loop = true } to register the server without entering copas.loop()
+ (useful when you already run your own loop).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span>
+         table { host, port, path, secret<em>token, timeout, no</em>loop }
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table|false the bound server socket, or false + error
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.webhook.verify_secret"></a>
+    <strong>api.webhook.verify_secret(received, expected)</strong>
+    </dt>
+    <dd>
+    check a received secret token against the expected one.
+ when no secret is configured (expected nil or empty) verification passes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">received</span>
+         string|nil the x-telegram-bot-api-secret-token header value
+        </li>
+        <li><span class="parameter">expected</span>
+         string|nil the secret configured with setWebhook
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean true if acceptable
     </ol>
 
 

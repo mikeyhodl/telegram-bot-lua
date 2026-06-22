@@ -34,9 +34,17 @@ api.switch_inline_query_button(text, query, encoded)
 api.switch_inline_query_current_chat_button(text, query, encoded)
 api.callback_game_button(text, callback_game, encoded)
 api.pay_button(text, pay, encoded)
+api.copy_text_button(text, copy_text)   -- button that copies copy_text to the clipboard
 ```
 
 Pass `encoded = true` to get a JSON string instead of a table.
+
+Two field objects used inside inline keyboard buttons:
+
+```lua
+api.web_app_info(url)              -- a WebAppInfo (button's web_app field)
+api.login_url(url, opts)           -- a LoginUrl; opts: forward_text, bot_username, request_write_access
+```
 
 ## Regular Keyboard
 
@@ -46,6 +54,28 @@ local kb = api.keyboard(true, true)  -- resize_keyboard, one_time_keyboard
     :row({'Button 3'})
 
 api.send_message(chat_id, 'Choose:', { reply_markup = kb })
+```
+
+### Reply keyboard request buttons
+
+Button objects for a regular (reply) keyboard. Place them in a row instead of plain strings:
+
+```lua
+api.keyboard_button_request_users(text, request_id, opts)
+    -- opts: user_is_bot, user_is_premium, max_quantity, request_name, request_username, request_photo
+api.keyboard_button_request_chat(text, request_id, chat_is_channel, opts)
+    -- opts: chat_is_forum, chat_has_username, chat_is_created, user_administrator_rights,
+    --       bot_administrator_rights, bot_is_member, request_title, request_username, request_photo
+api.keyboard_button_request_contact(text)
+api.keyboard_button_request_location(text)
+api.keyboard_button_request_poll(text, poll_type)   -- poll_type: 'quiz', 'regular', or nil
+api.keyboard_button_web_app(text, url)
+```
+
+```lua
+local kb = api.keyboard(true, true)
+    :row({ api.keyboard_button_request_contact('Share contact') })
+    :row({ api.keyboard_button_request_users('Pick users', 1, { max_quantity = 3 }) })
 ```
 
 ## Remove Keyboard
@@ -112,11 +142,52 @@ api.input_media_live_photo(media, photo, opts)
 api.input_media_link(url)
 api.input_paid_media_live_photo(media, photo)
 
+-- Paid media (for send_paid_media)
+api.input_paid_media_photo(media)
+api.input_paid_media_video(media, opts)
+    -- opts: thumbnail, cover, start_timestamp, width, height, duration, supports_streaming
+
 -- Chainable builder
 local media = api.input_media()
     :photo('photo_file_id', 'First photo')
     :photo('photo_file_id_2', 'Second photo')
     :video('video_file_id', 'A video', 1280, 720, 120)
+```
+
+## Input Poll Option
+
+```lua
+api.input_poll_option(text, opts)   -- opts: text_parse_mode, text_entities, media
+```
+
+## Input Checklist
+
+```lua
+api.input_checklist_task(id, text, opts)   -- opts: parse_mode, text_entities
+api.input_checklist(title, tasks, opts)
+    -- opts: parse_mode, title_entities, others_can_add_tasks, others_can_mark_tasks_as_done
+```
+
+```lua
+local checklist = api.input_checklist('Shopping', {
+    api.input_checklist_task(1, 'Milk'),
+    api.input_checklist_task(2, 'Bread')
+})
+api.send_checklist(chat_id, checklist)
+```
+
+## Input Story Content
+
+```lua
+api.input_story_content_photo(photo)
+api.input_story_content_video(video, opts)   -- opts: duration, cover_frame_timestamp, is_animation
+```
+
+## Input Profile Photo
+
+```lua
+api.input_profile_photo_static(photo)
+api.input_profile_photo_animated(animation, opts)   -- opts: main_frame_timestamp
 ```
 
 ## Rich Message Builders (Bot API 10.1)
@@ -269,6 +340,21 @@ api.menu_button_default()
 ```lua
 api.reaction_type_emoji('👍')
 api.reaction_type_custom_emoji('custom_emoji_id')
+api.reaction_type_paid()
+```
+
+### Accepted Gift Types
+
+For `set_business_account_gift_settings`:
+
+```lua
+api.accepted_gift_types({
+    unlimited_gifts = true,
+    limited_gifts = true,
+    unique_gifts = false,
+    premium_subscription = false,
+    gifts_from_channels = false
+})
 ```
 
 ### Reply Parameters

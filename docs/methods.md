@@ -46,6 +46,10 @@ api.send_paid_media(chat_id, star_count, media, opts)
 | `message_thread_id` | number | Forum topic ID |
 | `business_connection_id` | string | Business connection ID |
 | `message_effect_id` | string | Message effect ID |
+| `direct_messages_topic_id` | number | Direct-messages topic to send into |
+| `suggested_post_parameters` | table | Suggested-post parameters (`api.suggested_post_parameters()`) |
+
+The `send_*`, `forward_*`, and `copy_*` methods accept `direct_messages_topic_id` and `suggested_post_parameters` in their `opts` table.
 
 ### send_message example
 
@@ -81,9 +85,12 @@ api.edit_message_reply_markup(chat_id, message_id, opts)
 api.edit_message_live_location(chat_id, message_id, latitude, longitude, opts)
 api.stop_message_live_location(chat_id, message_id, opts)
 api.stop_poll(chat_id, message_id, opts)
+api.edit_message_checklist(business_connection_id, chat_id, message_id, checklist, opts)
 api.delete_message(chat_id, message_id)
 api.delete_messages(chat_id, message_ids)
 ```
+
+Build the `checklist` (an InputChecklist) with `api.input_checklist` / `api.input_checklist_task` — see [Builders](builders.md).
 
 `edit_message_text` also accepts a `rich_message` opt (Bot API 10.1) — see [Rich Messages](#rich-messages).
 
@@ -142,6 +149,8 @@ api.unpin_all_chat_messages(chat_id)
 api.export_chat_invite_link(chat_id)
 api.create_chat_invite_link(chat_id, opts)
 api.edit_chat_invite_link(chat_id, invite_link, opts)
+api.create_chat_subscription_invite_link(chat_id, subscription_period, subscription_price, opts)
+api.edit_chat_subscription_invite_link(chat_id, invite_link, opts)
 api.revoke_chat_invite_link(chat_id, invite_link)
 api.approve_chat_join_request(chat_id, user_id)
 api.decline_chat_join_request(chat_id, user_id)
@@ -206,6 +215,7 @@ api.delete_sticker_set(name)
 
 ```lua
 api.answer_inline_query(inline_query_id, results, opts)
+api.save_prepared_inline_message(user_id, result, opts)
 api.answer_web_app_query(web_app_query_id, result)
 api.answer_guest_query(guest_query_id, result)
 api.answer_callback_query(callback_query_id, opts)
@@ -223,6 +233,7 @@ api.create_invoice_link(title, description, payload, currency, prices, opts)
 api.answer_shipping_query(shipping_query_id, ok, opts)
 api.answer_pre_checkout_query(pre_checkout_query_id, ok, opts)
 api.get_star_transactions(opts)
+api.get_my_star_balance()
 api.refund_star_payment(user_id, telegram_payment_charge_id)
 api.edit_user_star_subscription(user_id, telegram_payment_charge_id, is_canceled)
 ```
@@ -260,6 +271,11 @@ api.remove_my_profile_photo(opts)
 api.get_managed_bot_access_settings(user_id)
 api.set_managed_bot_access_settings(user_id, is_access_restricted, opts)
 api.get_user_personal_chat_messages(user_id, limit)
+api.verify_user(user_id, opts)
+api.verify_chat(chat_id, opts)
+api.remove_user_verification(user_id)
+api.remove_chat_verification(chat_id)
+api.set_user_emoji_status(user_id, opts)
 ```
 
 ## Passport
@@ -274,7 +290,43 @@ api.set_passport_data_errors(user_id, errors)
 api.get_user_gifts(user_id)
 api.get_available_gifts()
 api.send_gift(user_id, gift_id, opts)
+api.transfer_gift(business_connection_id, owned_gift_id, new_owner_chat_id, opts)
+api.upgrade_gift(business_connection_id, owned_gift_id, opts)
+api.convert_gift_to_stars(business_connection_id, owned_gift_id)
+api.gift_premium_subscription(user_id, month_count, star_count, opts)
 ```
+
+## Stories
+
+```lua
+api.post_story(business_connection_id, content, active_period, opts)
+api.edit_story(business_connection_id, story_id, content, opts)
+api.delete_story(business_connection_id, story_id)
+api.repost_story(chat_id, story_id)
+```
+
+Build the `content` (an InputStoryContent) with `api.input_story_content_photo` / `api.input_story_content_video` — see [Builders](builders.md).
+
+## Business Accounts
+
+Methods that act on a connected business account; all take the `business_connection_id`.
+
+```lua
+api.get_business_connection(business_connection_id)
+api.read_business_message(business_connection_id, chat_id, message_id)
+api.delete_business_messages(business_connection_id, message_ids)
+api.set_business_account_name(business_connection_id, first_name, opts)
+api.set_business_account_username(business_connection_id, opts)
+api.set_business_account_bio(business_connection_id, opts)
+api.set_business_account_profile_photo(business_connection_id, photo, opts)
+api.remove_business_account_profile_photo(business_connection_id, opts)
+api.set_business_account_gift_settings(business_connection_id, show_gift_button, accepted_gift_types)
+api.get_business_account_star_balance(business_connection_id)
+api.transfer_business_account_stars(business_connection_id, star_count)
+api.get_business_account_gifts(business_connection_id, opts)
+```
+
+Build `accepted_gift_types` with `api.accepted_gift_types()` — see [Builders](builders.md).
 
 ## Helper Methods
 

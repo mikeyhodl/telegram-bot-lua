@@ -41,7 +41,7 @@
 <ul class="nowrap">
   <li><a href="../modules/b64url.html">b64url</a></li>
   <li><a href="../modules/telegram-bot-lua.html">telegram-bot-lua</a></li>
-  <li><strong>telegram-bot-lua.adapters</strong></li>
+  <li><a href="../modules/telegram-bot-lua.adapters.html">telegram-bot-lua.adapters</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.db.html">telegram-bot-lua.adapters.db</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.email.html">telegram-bot-lua.adapters.email</a></li>
   <li><a href="../modules/telegram-bot-lua.adapters.llm.html">telegram-bot-lua.adapters.llm</a></li>
@@ -50,7 +50,7 @@
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
   <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
-  <li><a href="../modules/telegram-bot-lua.framework.html">telegram-bot-lua.framework</a></li>
+  <li><strong>telegram-bot-lua.framework</strong></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
   <li><a href="../modules/telegram-bot-lua.log.html">telegram-bot-lua.log</a></li>
@@ -88,24 +88,45 @@
 
 <div id="content">
 
-<h1>Module <code>telegram-bot-lua.adapters</code></h1>
-<p>adapter registry for database, Redis, LLM, and email adapters.</p>
-<p>[[</p>
+<h1>Module <code>telegram-bot-lua.framework</code></h1>
+<p>framework layer: rich context, command router, and conversations.</p>
+<p> all additive and opt-in: if no command/hears/conversation is registered the
+ dispatch path is unchanged and existing on_* handlers run as before.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#api.adapters.create_socket">api.adapters.create_socket()</a></td>
-	<td class="summary">create a TCP socket that auto-selects sync or async mode.</td>
+	<td class="name" nowrap><a href="#api._conversation_resume">api._conversation_resume(ctx)</a></td>
+	<td class="summary">resume a pending conversation if this update is awaited by the user.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#api.adapters.http_request">api.adapters.http_request(url, opts)</a></td>
-	<td class="summary">perform an HTTP request that auto-selects sync or async transport.</td>
+	<td class="name" nowrap><a href="#api._framework_handle">api._framework_handle(update)</a></td>
+	<td class="summary">framework dispatch: conversations, then commands, then hears.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#api.adapters.is_async">api.adapters.is_async()</a></td>
-	<td class="summary">check if we're inside a copas async context.</td>
+	<td class="name" nowrap><a href="#api.build_context">api.build_context(update)</a></td>
+	<td class="summary">build a rich context object from a raw update.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.command">api.command(name, opts_or_handler, handler)</a></td>
+	<td class="summary">register a command handler.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.conversation">api.conversation(name, fn)</a></td>
+	<td class="summary">register a named conversation (a function(ctx) that may call ctx.wait_for()).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.enter">api.enter(fn, update)</a></td>
+	<td class="summary">start a conversation for the user in <code>update</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.hears">api.hears(pattern, handler)</a></td>
+	<td class="summary">register a text matcher; pattern is a lua pattern or a function(text)->any.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.on_command_not_found">api.on_command_not_found(handler)</a></td>
+	<td class="summary">handler for a message that looks like a command but matches none.</td>
 	</tr>
 </table>
 
@@ -117,48 +138,26 @@
 
     <dl class="function">
     <dt>
-    <a name = "api.adapters.create_socket"></a>
-    <strong>api.adapters.create_socket()</strong>
+    <a name = "api._conversation_resume"></a>
+    <strong>api._conversation_resume(ctx)</strong>
     </dt>
     <dd>
-    create a TCP socket that auto-selects sync or async mode.
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-        userdata a TCP socket, wrapped with copas if in async context
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "api.adapters.http_request"></a>
-    <strong>api.adapters.http_request(url, opts)</strong>
-    </dt>
-    <dd>
-    perform an HTTP request that auto-selects sync or async transport.
+    resume a pending conversation if this update is awaited by the user.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">url</span>
-         string the request URL
-        </li>
-        <li><span class="parameter">opts</span>
-         table optional request options (method, headers, body)
+        <li><span class="parameter">ctx</span>
+
+
+
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-        string response body, or nil on error</li>
-        <li>
-        number HTTP status code or error message</li>
+
+        boolean true if the update was consumed by a conversation
     </ol>
 
 
@@ -166,19 +165,183 @@
 
 </dd>
     <dt>
-    <a name = "api.adapters.is_async"></a>
-    <strong>api.adapters.is_async()</strong>
+    <a name = "api._framework_handle"></a>
+    <strong>api._framework_handle(update)</strong>
     </dt>
     <dd>
-    check if we're inside a copas async context.
+    framework dispatch: conversations, then commands, then hears.
+ returns true if the update was fully handled (skip the on_* handlers).
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">update</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.build_context"></a>
+    <strong>api.build_context(update)</strong>
+    </dt>
+    <dd>
+    build a rich context object from a raw update.
+   reply/reply<em>with</em>photo/answer convenience methods
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">update</span>
+         table the raw update
+        </li>
+    </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        boolean true if running inside copas
+        table a ctx with update_type, payload, chat, from, session, and
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.command"></a>
+    <strong>api.command(name, opts_or_handler, handler)</strong>
+    </dt>
+    <dd>
+    register a command handler.
+ api.command('start', handler) or api.command('ban', { guard = fn }, handler)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+
+
+        </li>
+        <li><span class="parameter">opts_or_handler</span>
+
+
+
+        </li>
+        <li><span class="parameter">handler</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.conversation"></a>
+    <strong>api.conversation(name, fn)</strong>
+    </dt>
+    <dd>
+    register a named conversation (a function(ctx) that may call ctx.wait_for()).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+
+
+        </li>
+        <li><span class="parameter">fn</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.enter"></a>
+    <strong>api.enter(fn, update)</strong>
+    </dt>
+    <dd>
+    start a conversation for the user in <code>update</code>.  ctx.wait_for() suspends the
+ conversation until the user's next message/callback arrives and returns its
+ ctx. works in both sync (plain coroutine) and async (copas thread) modes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fn</span>
+         function|string a conversation function or a registered name
+        </li>
+        <li><span class="parameter">update</span>
+         table the triggering update
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.hears"></a>
+    <strong>api.hears(pattern, handler)</strong>
+    </dt>
+    <dd>
+    register a text matcher; pattern is a lua pattern or a function(text)->any.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pattern</span>
+
+
+
+        </li>
+        <li><span class="parameter">handler</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.on_command_not_found"></a>
+    <strong>api.on_command_not_found(handler)</strong>
+    </dt>
+    <dd>
+    handler for a message that looks like a command but matches none.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">handler</span>
+
+
+
+        </li>
+    </ul>
+
 
 
 
