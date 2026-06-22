@@ -131,7 +131,10 @@ return function(api)
             local mailbox = require('copas.queue').new()
             api._waiters[key] = { mailbox = mailbox }
             ctx.wait_for = function()
-                return mailbox:pop()
+                -- block until a message is pushed; copas.queue defaults to a
+                -- 10s pop timeout, so an explicit math.huge is required or a
+                -- conversation would silently abort after ~10s of waiting.
+                return mailbox:pop(math.huge)
             end
             copas.addthread(function()
                 local ok, err = pcall(fn, ctx)

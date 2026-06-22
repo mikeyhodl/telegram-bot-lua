@@ -58,21 +58,24 @@ return function(api)
             local output = json.encode(safe, { ['indent'] = true })
             print(output)
         end
-        if file and next(file) ~= nil then
-            local file_type, file_name = next(file)
-            if type(file_name) == 'string' then
-                local file_res = io.open(file_name, 'rb')
-                if file_res then
-                    parameters[file_type] = {
-                        filename = file_name,
-                        data = file_res:read('*a')
-                    }
-                    file_res:close()
+        -- iterate every file part (mirrors the sync path); next(file) alone
+        -- would only handle the first key and silently drop e.g. a thumbnail.
+        if file then
+            for file_type, file_name in pairs(file) do
+                if type(file_name) == 'string' then
+                    local file_res = io.open(file_name, 'rb')
+                    if file_res then
+                        parameters[file_type] = {
+                            filename = file_name,
+                            data = file_res:read('*a')
+                        }
+                        file_res:close()
+                    else
+                        parameters[file_type] = file_name
+                    end
                 else
                     parameters[file_type] = file_name
                 end
-            else
-                parameters[file_type] = file_name
             end
         end
         parameters = next(parameters) == nil and {''} or parameters
