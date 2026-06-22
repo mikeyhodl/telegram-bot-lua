@@ -45,9 +45,13 @@ return function(api)
     function api.async.request(endpoint, parameters, file)
         assert(endpoint, 'You must specify an endpoint to make this request to!')
         parameters = parameters or {}
+        -- shallow copy so the caller's table is never mutated; stringify
+        -- scalars for multipart, leave tables (file parts) untouched.
+        local params = {}
         for k, v in pairs(parameters) do
-            parameters[k] = tostring(v)
+            params[k] = type(v) == 'table' and v or tostring(v)
         end
+        parameters = params
         if api.debug then
             local safe = {}
             for k, v in pairs(parameters) do safe[k] = v end
@@ -100,7 +104,7 @@ return function(api)
         local jstr = table.concat(response)
         local jdat = json.decode(jstr)
         if not jdat then
-            return false, res
+            return false, { ['ok'] = false, ['description'] = 'failed to decode API response', ['body'] = jstr }
         elseif not jdat.ok then
             if api.debug then
                 local output = '\n' .. tostring(jdat.description) .. ' [' .. tostring(jdat.error_code) .. ']\n'
@@ -150,7 +154,7 @@ return function(api)
                     backoff = math.min(backoff * 2, max_backoff)
                 elseif updates and type(updates) == 'table' and updates.result then
                     backoff = 1
-                    for _, v in pairs(updates.result) do
+                    for _, v in ipairs(updates.result) do
                         -- each update gets its own coroutine
                         copas.addthread(function()
                             local ok, err = pcall(api.process_update, v)

@@ -9,13 +9,13 @@
         local llm = api.llm.new({
             provider = 'openai',
             api_key = 'sk-...',
-            model = 'gpt-4o',
+            model = 'gpt-5.5',
         })
         -- or
         local llm = api.llm.new({
             provider = 'anthropic',
             api_key = 'sk-ant-...',
-            model = 'claude-sonnet-4-5-20250929',
+            model = 'claude-opus-4-8',
         })
 
         local response = llm:chat({
@@ -67,7 +67,7 @@ return function(api)
         local instance = {
             _provider = 'openai',
             _api_key = opts.api_key,
-            _model = opts.model or 'gpt-4o',
+            _model = opts.model or 'gpt-5.5',
             _base_url = opts.base_url or 'https://api.openai.com/v1',
             _default_opts = opts.defaults or {},
         }
@@ -188,7 +188,7 @@ return function(api)
         local instance = {
             _provider = 'anthropic',
             _api_key = opts.api_key,
-            _model = opts.model or 'claude-sonnet-4-5-20250929',
+            _model = opts.model or 'claude-opus-4-8',
             _base_url = opts.base_url or 'https://api.anthropic.com/v1',
             _default_opts = opts.defaults or {},
         }

@@ -44,7 +44,10 @@ return function(api)
         if parse_mode:lower() == 'html' then
             return '<code>' .. tools.escape_html(text) .. '</code>'
         end
-        return '`' .. text .. '`'
+        -- inside markdown code entities, backticks and backslashes must be
+        -- escaped or they break out of / corrupt the entity.
+        local escaped = tostring(text):gsub('([`\\])', '\\%1')
+        return '`' .. escaped .. '`'
     end
 
     --- format text as a pre-formatted code block.

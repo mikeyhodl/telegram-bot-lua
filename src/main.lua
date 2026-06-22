@@ -72,9 +72,13 @@ end
 function api.request(endpoint, parameters, file)
     assert(endpoint, 'You must specify an endpoint to make this request to!')
     parameters = parameters or {}
+    -- work on a shallow copy so we never mutate the caller's table; stringify
+    -- scalars for multipart encoding but leave tables (file parts) untouched.
+    local params = {}
     for k, v in pairs(parameters) do
-        parameters[k] = tostring(v)
+        params[k] = type(v) == 'table' and v or tostring(v)
     end
+    parameters = params
     if api.debug then
         local safe = {}
         for k, v in pairs(parameters) do safe[k] = v end
@@ -127,7 +131,7 @@ function api.request(endpoint, parameters, file)
     local jstr = table.concat(response)
     local jdat = json.decode(jstr)
     if not jdat then
-        return false, res
+        return false, { ['ok'] = false, ['description'] = 'failed to decode API response', ['body'] = jstr }
     elseif not jdat.ok then
         if api.debug then
             local output = '\n' .. tostring(jdat.description) .. ' [' .. tostring(jdat.error_code) .. ']\n'

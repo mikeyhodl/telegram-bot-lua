@@ -66,7 +66,7 @@ db:execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)
 local llm = api.llm.new({
     provider = 'anthropic',
     api_key = os.getenv('ANTHROPIC_API_KEY'),
-    model = 'claude-sonnet-4-5-20250929',
+    model = 'claude-sonnet-4-6',
 })
 
 function api.on_message(message)

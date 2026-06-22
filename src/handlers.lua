@@ -99,6 +99,9 @@ return function(api)
     --- called when a managed bot update is received.
     -- @param managed_bot table the managed bot updated object
     function api.on_managed_bot(_) end
+    --- called when the bot receives a guest message (Bot API 10.0).
+    -- @param guest_message table the guest message update object
+    function api.on_guest_message(_) end
 
     --- raw dispatch: routes an update directly to the appropriate handler.
     -- called by the middleware chain as the final step, or directly when
@@ -169,6 +172,8 @@ return function(api)
             return api.on_purchased_paid_media(update.purchased_paid_media)
         elseif update.managed_bot then
             return api.on_managed_bot(update.managed_bot)
+        elseif update.guest_message then
+            return api.on_guest_message(update.guest_message)
         end
         return false
     end
@@ -250,8 +255,12 @@ return function(api)
                 backoff = math.min(backoff * 2, max_backoff)
             elseif updates and type(updates) == 'table' and updates.result then
                 backoff = 1
-                for _, v in pairs(updates.result) do
-                    api.process_update(v)
+                for _, v in ipairs(updates.result) do
+                    -- protect the loop: a throwing handler must not kill the bot.
+                    local ok, err = pcall(api.process_update, v)
+                    if not ok and api.debug then
+                        print('Update handler error: ' .. tostring(err))
+                    end
                     offset = v.update_id + 1
                 end
             else
