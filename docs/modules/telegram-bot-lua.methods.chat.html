@@ -48,6 +48,7 @@
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
   <li><a href="../modules/telegram-bot-lua.async.html">telegram-bot-lua.async</a></li>
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
+  <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
@@ -63,6 +64,7 @@
   <li><a href="../modules/telegram-bot-lua.methods.messages.html">telegram-bot-lua.methods.messages</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.passport.html">telegram-bot-lua.methods.passport</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.payments.html">telegram-bot-lua.methods.payments</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.rich.html">telegram-bot-lua.methods.rich</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stickers.html">telegram-bot-lua.methods.stickers</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stories.html">telegram-bot-lua.methods.stories</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.suggested_posts.html">telegram-bot-lua.methods.suggested_posts</a></li>
@@ -90,6 +92,10 @@
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#api.answer_chat_join_request_query">api.answer_chat_join_request_query(chat_join_request_query_id, result)</a></td>
+	<td class="summary">answer a join request query received from a guard bot (Bot API 10.1).</td>
+	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.approve_chat_join_request">api.approve_chat_join_request(chat_id, user_id)</a></td>
 	<td class="summary">approve a chat join request.</td>
@@ -123,7 +129,7 @@
 	<td class="summary">get up-to-date information about the chat.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#api.get_chat_administrators">api.get_chat_administrators(chat_id)</a></td>
+	<td class="name" nowrap><a href="#api.get_chat_administrators">api.get_chat_administrators(chat_id, opts)</a></td>
 	<td class="summary">get a list of administrators in a chat.</td>
 	</tr>
 	<tr>
@@ -149,6 +155,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.revoke_chat_invite_link">api.revoke_chat_invite_link(chat_id, invite_link)</a></td>
 	<td class="summary">revoke an invite link created by the bot.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.send_chat_join_request_web_app">api.send_chat_join_request_web_app(chat_join_request_query_id, web_app_url)</a></td>
+	<td class="summary">open a mini app in response to a join request query (Bot API 10.1).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.set_chat_description">api.set_chat_description(chat_id, description)</a></td>
@@ -187,6 +197,34 @@
     <h2 class="section-header "><a name="Functions"></a>Functions</h2>
 
     <dl class="function">
+    <dt>
+    <a name = "api.answer_chat_join_request_query"></a>
+    <strong>api.answer_chat_join_request_query(chat_join_request_query_id, result)</strong>
+    </dt>
+    <dd>
+    answer a join request query received from a guard bot (Bot API 10.1).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_join_request_query_id</span>
+         string unique identifier of the join request query
+        </li>
+        <li><span class="parameter">result</span>
+         string one of "approve", "decline", or "queue"
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
     <dt>
     <a name = "api.approve_chat_join_request"></a>
     <strong>api.approve_chat_join_request(chat_id, user_id)</strong>
@@ -428,7 +466,7 @@
 </dd>
     <dt>
     <a name = "api.get_chat_administrators"></a>
-    <strong>api.get_chat_administrators(chat_id)</strong>
+    <strong>api.get_chat_administrators(chat_id, opts)</strong>
     </dt>
     <dd>
     get a list of administrators in a chat.
@@ -439,6 +477,12 @@
         <li><span class="parameter">chat_id</span>
          number|string unique identifier for the target chat or username of the target supergroup/channel
         </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">return_bots</span>
+         boolean pass true to additionally receive bots that are administrators
+        </li>
+        </li></ul>
     </ul>
 
     <h3>Returns:</h3>
@@ -609,6 +653,34 @@
         </li>
         <li><span class="parameter">invite_link</span>
          string the invite link to revoke
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.send_chat_join_request_web_app"></a>
+    <strong>api.send_chat_join_request_web_app(chat_join_request_query_id, web_app_url)</strong>
+    </dt>
+    <dd>
+    open a mini app in response to a join request query (Bot API 10.1).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">chat_join_request_query_id</span>
+         string unique identifier of the join request query
+        </li>
+        <li><span class="parameter">web_app_url</span>
+         string the url of the mini app to be opened
         </li>
     </ul>
 
@@ -834,7 +906,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-04-07 21:37:15 </i>
+<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

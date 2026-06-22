@@ -237,6 +237,53 @@ return function(api)
         return success, res
     end
 
+    --- send a live photo (a static photo paired with a short video) to a chat.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target channel
+    -- @param live_photo string|file the live photo video (file_id or upload); urls are unsupported
+    -- @param photo string|file the static photo (file_id or upload); urls are unsupported
+    -- @param opts table optional parameters
+    -- @param opts.caption string caption for the live photo
+    -- @param opts.parse_mode string mode for parsing entities in the caption
+    -- @param opts.has_spoiler boolean cover the live photo with a spoiler animation
+    -- @param opts.show_caption_above_media boolean show the caption above the media
+    -- @param opts.reply_markup table additional interface options
+    -- @param opts.reply_parameters table description of the message to reply to
+    -- @param opts.disable_notification boolean send the message silently
+    -- @return table,number the response object and HTTP status
+    function api.send_live_photo(chat_id, live_photo, photo, opts)
+        opts = opts or {}
+        local caption_entities = opts.caption_entities
+        caption_entities = type(caption_entities) == 'table' and json.encode(caption_entities) or caption_entities
+        local suggested_post_parameters = opts.suggested_post_parameters
+        suggested_post_parameters = type(suggested_post_parameters) == 'table' and json.encode(suggested_post_parameters) or suggested_post_parameters
+        local reply_parameters = opts.reply_parameters
+        reply_parameters = type(reply_parameters) == 'table' and json.encode(reply_parameters) or reply_parameters
+        local reply_markup = opts.reply_markup
+        reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
+        local success, res = api.request(config.endpoint .. api.token .. '/sendLivePhoto', {
+            ['business_connection_id'] = opts.business_connection_id,
+            ['chat_id'] = chat_id,
+            ['message_thread_id'] = opts.message_thread_id,
+            ['direct_messages_topic_id'] = opts.direct_messages_topic_id,
+            ['caption'] = opts.caption,
+            ['parse_mode'] = opts.parse_mode,
+            ['caption_entities'] = caption_entities,
+            ['show_caption_above_media'] = opts.show_caption_above_media,
+            ['has_spoiler'] = opts.has_spoiler,
+            ['disable_notification'] = opts.disable_notification,
+            ['protect_content'] = opts.protect_content,
+            ['allow_paid_broadcast'] = opts.allow_paid_broadcast,
+            ['message_effect_id'] = opts.message_effect_id,
+            ['suggested_post_parameters'] = suggested_post_parameters,
+            ['reply_parameters'] = reply_parameters,
+            ['reply_markup'] = reply_markup
+        }, {
+            ['live_photo'] = live_photo,
+            ['photo'] = photo
+        })
+        return success, res
+    end
+
     --- send an audio file to a chat.
     -- the audio must be in .mp3 or .m4a format; the bots api sends audio files of up to 50 MB.
     -- @param chat_id number|string unique identifier for the target chat or username of the target channel
@@ -661,6 +708,12 @@ return function(api)
         reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
         local correct_option_ids = opts.correct_option_ids
         correct_option_ids = type(correct_option_ids) == 'table' and json.encode(correct_option_ids) or correct_option_ids
+        local media = opts.media
+        media = type(media) == 'table' and json.encode(media) or media
+        local explanation_media = opts.explanation_media
+        explanation_media = type(explanation_media) == 'table' and json.encode(explanation_media) or explanation_media
+        local country_codes = opts.country_codes
+        country_codes = type(country_codes) == 'table' and json.encode(country_codes) or country_codes
         local success, res = api.request(config.endpoint .. api.token .. '/sendPoll', {
             ['chat_id'] = chat_id,
             ['message_thread_id'] = opts.message_thread_id,
@@ -683,6 +736,10 @@ return function(api)
             ['shuffle_options'] = opts.shuffle_options,
             ['allow_adding_options'] = opts.allow_adding_options,
             ['hide_results_until_closes'] = opts.hide_results_until_closes,
+            ['members_only'] = opts.members_only,
+            ['country_codes'] = country_codes,
+            ['media'] = media,
+            ['explanation_media'] = explanation_media,
             ['description'] = opts.description,
             ['description_parse_mode'] = opts.description_parse_mode,
             ['description_entities'] = description_entities,
@@ -765,6 +822,40 @@ return function(api)
         return success, res
     end
 
+    --- remove a specific reaction from a message.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target supergroup
+    -- @param message_id number identifier of the target message
+    -- @param opts table optional parameters
+    -- @param opts.user_id number identifier of the user whose reaction will be removed
+    -- @param opts.actor_chat_id number identifier of the chat whose reaction will be removed
+    -- @return table,number the response object and HTTP status
+    function api.delete_message_reaction(chat_id, message_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/deleteMessageReaction', {
+            ['chat_id'] = chat_id,
+            ['message_id'] = message_id,
+            ['user_id'] = opts.user_id,
+            ['actor_chat_id'] = opts.actor_chat_id
+        })
+        return success, res
+    end
+
+    --- remove all reactions in a chat that were added by a given user or chat.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target supergroup
+    -- @param opts table optional parameters
+    -- @param opts.user_id number identifier of the user whose reactions will be removed
+    -- @param opts.actor_chat_id number identifier of the chat whose reactions will be removed
+    -- @return table,number the response object and HTTP status
+    function api.delete_all_message_reactions(chat_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/deleteAllMessageReactions', {
+            ['chat_id'] = chat_id,
+            ['user_id'] = opts.user_id,
+            ['actor_chat_id'] = opts.actor_chat_id
+        })
+        return success, res
+    end
+
     --- send paid media to a channel chat.
     -- @param chat_id number|string unique identifier for the target chat or username of the target channel
     -- @param star_count number the number of telegram stars that must be paid to buy access to the media
@@ -816,6 +907,8 @@ return function(api)
         reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
         local parse_mode = opts.parse_mode
         parse_mode = (type(parse_mode) == 'boolean' and parse_mode == true) and 'MarkdownV2' or parse_mode
+        local rich_message = opts.rich_message
+        rich_message = type(rich_message) == 'table' and json.encode(rich_message) or rich_message
         local success, res = api.request(config.endpoint .. api.token .. '/editMessageText', {
             ['chat_id'] = chat_id,
             ['message_id'] = message_id,
@@ -824,6 +917,7 @@ return function(api)
             ['parse_mode'] = parse_mode,
             ['entities'] = entities,
             ['link_preview_options'] = link_preview_options,
+            ['rich_message'] = rich_message,
             ['reply_markup'] = reply_markup,
             ['business_connection_id'] = opts.business_connection_id
         })

@@ -270,4 +270,44 @@ return function(api)
         })
         return success, res
     end
+
+    --- get the access settings of a managed bot (Bot API 10.0).
+    -- @param user_id number user identifier of the managed bot
+    -- @return table,number the response object and HTTP status
+    function api.get_managed_bot_access_settings(user_id)
+        local success, res = api.request(config.endpoint .. api.token .. '/getManagedBotAccessSettings', {
+            ['user_id'] = user_id
+        })
+        return success, res
+    end
+
+    --- change the access settings of a managed bot (Bot API 10.0).
+    -- @param user_id number user identifier of the managed bot
+    -- @param is_access_restricted boolean true if only selected users can access the bot
+    -- @param opts table optional parameters
+    -- @param opts.added_user_ids table list of up to 10 user ids granted access in addition to the owner
+    -- @return table,number the response object and HTTP status
+    function api.set_managed_bot_access_settings(user_id, is_access_restricted, opts)
+        opts = opts or {}
+        local added_user_ids = opts.added_user_ids
+        added_user_ids = type(added_user_ids) == 'table' and json.encode(added_user_ids) or added_user_ids
+        local success, res = api.request(config.endpoint .. api.token .. '/setManagedBotAccessSettings', {
+            ['user_id'] = user_id,
+            ['is_access_restricted'] = is_access_restricted,
+            ['added_user_ids'] = added_user_ids
+        })
+        return success, res
+    end
+
+    --- get recent messages from a user's personal chat (Bot API 10.0).
+    -- @param user_id number unique identifier for the target user
+    -- @param limit number maximum number of messages to return; 1-20
+    -- @return table,number the response object and HTTP status
+    function api.get_user_personal_chat_messages(user_id, limit)
+        local success, res = api.request(config.endpoint .. api.token .. '/getUserPersonalChatMessages', {
+            ['user_id'] = user_id,
+            ['limit'] = limit
+        })
+        return success, res
+    end
 end

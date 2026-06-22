@@ -48,6 +48,7 @@
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
   <li><a href="../modules/telegram-bot-lua.async.html">telegram-bot-lua.async</a></li>
   <li><strong>telegram-bot-lua.builders</strong></li>
+  <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
@@ -63,6 +64,7 @@
   <li><a href="../modules/telegram-bot-lua.methods.messages.html">telegram-bot-lua.methods.messages</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.passport.html">telegram-bot-lua.methods.passport</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.payments.html">telegram-bot-lua.methods.payments</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.rich.html">telegram-bot-lua.methods.rich</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stickers.html">telegram-bot-lua.methods.stickers</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stories.html">telegram-bot-lua.methods.stories</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.suggested_posts.html">telegram-bot-lua.methods.suggested_posts</a></li>
@@ -107,12 +109,36 @@
 	<td class="summary">add a row of buttons to the inline keyboard.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.input_media_link">api.input_media_link(url)</a></td>
+	<td class="summary">create an input media link object (Bot API 10.1).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_media_live_photo">api.input_media_live_photo(media, photo, opts)</a></td>
+	<td class="summary">create an input media live photo object (Bot API 10.0).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_media_location">api.input_media_location(latitude, longitude, horizontal_accuracy)</a></td>
+	<td class="summary">create an input media location object (Bot API 10.0).</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.input_media_photo">api.input_media_photo(media, caption, parse_mode)</a></td>
 	<td class="summary">create an input media photo object for use with sendMediaGroup and editMessageMedia.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.input_media_sticker">api.input_media_sticker(media, emoji)</a></td>
+	<td class="summary">create an input media sticker object (Bot API 10.0).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_media_venue">api.input_media_venue(latitude, longitude, title, address, opts)</a></td>
+	<td class="summary">create an input media venue object (Bot API 10.0).</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.input_media_video">api.input_media_video(media, thumbnail, caption, parse_mode, width, height, duration, supports_streaming)</a></td>
 	<td class="summary">create an input media video object for use with sendMediaGroup and editMessageMedia.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.input_paid_media_live_photo">api.input_paid_media_live_photo(media, photo)</a></td>
+	<td class="summary">create an input paid media live photo object (Bot API 10.0).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.keyboard">api.keyboard(resize_keyboard, one_time_keyboard, selective)</a></td>
@@ -310,6 +336,93 @@
 
 </dd>
     <dt>
+    <a name = "api.input_media_link"></a>
+    <strong>api.input_media_link(url)</strong>
+    </dt>
+    <dd>
+    create an input media link object (Bot API 10.1).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+         string HTTP url of the link
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input media object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_live_photo"></a>
+    <strong>api.input_media_live_photo(media, photo, opts)</strong>
+    </dt>
+    <dd>
+    create an input media live photo object (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id or attach reference for the live photo video
+        </li>
+        <li><span class="parameter">photo</span>
+         string file_id or attach reference for the static photo
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional caption, parse<em>mode, caption</em>entities, show<em>caption</em>above<em>media, has</em>spoiler
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_location"></a>
+    <strong>api.input_media_location(latitude, longitude, horizontal_accuracy)</strong>
+    </dt>
+    <dd>
+    create an input media location object (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">latitude</span>
+         number latitude of the location
+        </li>
+        <li><span class="parameter">longitude</span>
+         number longitude of the location
+        </li>
+        <li><span class="parameter">horizontal_accuracy</span>
+         number optional radius of uncertainty in metres (0-1500)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input media object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.input_media_photo"></a>
     <strong>api.input_media_photo(media, caption, parse_mode)</strong>
     </dt>
@@ -334,6 +447,71 @@
     <ol>
 
         table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_sticker"></a>
+    <strong>api.input_media_sticker(media, emoji)</strong>
+    </dt>
+    <dd>
+    create an input media sticker object (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id, url, or attach reference for the sticker
+        </li>
+        <li><span class="parameter">emoji</span>
+         string optional emoji associated with a just-uploaded sticker
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_media_venue"></a>
+    <strong>api.input_media_venue(latitude, longitude, title, address, opts)</strong>
+    </dt>
+    <dd>
+    create an input media venue object (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">latitude</span>
+         number latitude of the venue
+        </li>
+        <li><span class="parameter">longitude</span>
+         number longitude of the venue
+        </li>
+        <li><span class="parameter">title</span>
+         string name of the venue
+        </li>
+        <li><span class="parameter">address</span>
+         string address of the venue
+        </li>
+        <li><span class="parameter">opts</span>
+         table optional foursquare<em>id, foursquare</em>type, google<em>place</em>id, google<em>place</em>type
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table the input media object
     </ol>
 
 
@@ -380,6 +558,34 @@
     <ol>
 
         table,table the input media object and a table of file references
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.input_paid_media_live_photo"></a>
+    <strong>api.input_paid_media_live_photo(media, photo)</strong>
+    </dt>
+    <dd>
+    create an input paid media live photo object (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">media</span>
+         string file_id or attach reference for the live photo video
+        </li>
+        <li><span class="parameter">photo</span>
+         string file_id or attach reference for the static photo
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,table the input paid media object and a table of file references
     </ol>
 
 
@@ -946,7 +1152,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-04-07 21:37:15 </i>
+<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

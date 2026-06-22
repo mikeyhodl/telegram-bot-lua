@@ -45,6 +45,20 @@ return function(api)
         return success, res
     end
 
+    --- answer a guest query with a single inline result (Bot API 10.0).
+    -- @param guest_query_id string unique identifier for the query to be answered
+    -- @param result string|table an InlineQueryResult object describing the message to send
+    -- @return table|false the sent message, or false on failure
+    -- @return string|table the HTTP status or error details
+    function api.answer_guest_query(guest_query_id, result)
+        result = type(result) == 'table' and json.encode(result) or result
+        local success, res = api.request(config.endpoint .. api.token .. '/answerGuestQuery', {
+            ['guest_query_id'] = guest_query_id,
+            ['result'] = result
+        })
+        return success, res
+    end
+
     --- send answers to callback queries sent from inline keyboards.
     -- @param callback_query_id string unique identifier for the query to be answered
     -- @param opts table optional parameters (text, show_alert, url, cache_time)

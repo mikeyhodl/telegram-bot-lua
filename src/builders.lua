@@ -423,6 +423,98 @@ return function(api)
         }
     end
 
+    --- create an input media sticker object (Bot API 10.0).
+    -- @param media string file_id, url, or attach reference for the sticker
+    -- @param emoji string optional emoji associated with a just-uploaded sticker
+    -- @return table,table the input media object and a table of file references
+    function api.input_media_sticker(media, emoji)
+        return {
+            ['type'] = 'sticker',
+            ['emoji'] = emoji
+        }, {
+            ['media'] = media
+        }
+    end
+
+    --- create an input media location object (Bot API 10.0).
+    -- @param latitude number latitude of the location
+    -- @param longitude number longitude of the location
+    -- @param horizontal_accuracy number optional radius of uncertainty in metres (0-1500)
+    -- @return table the input media object
+    function api.input_media_location(latitude, longitude, horizontal_accuracy)
+        return {
+            ['type'] = 'location',
+            ['latitude'] = tonumber(latitude),
+            ['longitude'] = tonumber(longitude),
+            ['horizontal_accuracy'] = tonumber(horizontal_accuracy)
+        }
+    end
+
+    --- create an input media venue object (Bot API 10.0).
+    -- @param latitude number latitude of the venue
+    -- @param longitude number longitude of the venue
+    -- @param title string name of the venue
+    -- @param address string address of the venue
+    -- @param opts table optional foursquare_id, foursquare_type, google_place_id, google_place_type
+    -- @return table the input media object
+    function api.input_media_venue(latitude, longitude, title, address, opts)
+        opts = opts or {}
+        return {
+            ['type'] = 'venue',
+            ['latitude'] = tonumber(latitude),
+            ['longitude'] = tonumber(longitude),
+            ['title'] = title,
+            ['address'] = address,
+            ['foursquare_id'] = opts.foursquare_id,
+            ['foursquare_type'] = opts.foursquare_type,
+            ['google_place_id'] = opts.google_place_id,
+            ['google_place_type'] = opts.google_place_type
+        }
+    end
+
+    --- create an input media live photo object (Bot API 10.0).
+    -- @param media string file_id or attach reference for the live photo video
+    -- @param photo string file_id or attach reference for the static photo
+    -- @param opts table optional caption, parse_mode, caption_entities, show_caption_above_media, has_spoiler
+    -- @return table,table the input media object and a table of file references
+    function api.input_media_live_photo(media, photo, opts)
+        opts = opts or {}
+        return {
+            ['type'] = 'live_photo',
+            ['caption'] = opts.caption,
+            ['parse_mode'] = opts.parse_mode,
+            ['caption_entities'] = opts.caption_entities,
+            ['show_caption_above_media'] = opts.show_caption_above_media,
+            ['has_spoiler'] = opts.has_spoiler
+        }, {
+            ['media'] = media,
+            ['photo'] = photo
+        }
+    end
+
+    --- create an input media link object (Bot API 10.1).
+    -- @param url string HTTP url of the link
+    -- @return table the input media object
+    function api.input_media_link(url)
+        return {
+            ['type'] = 'link',
+            ['url'] = url
+        }
+    end
+
+    --- create an input paid media live photo object (Bot API 10.0).
+    -- @param media string file_id or attach reference for the live photo video
+    -- @param photo string file_id or attach reference for the static photo
+    -- @return table,table the input paid media object and a table of file references
+    function api.input_paid_media_live_photo(media, photo)
+        return {
+            ['type'] = 'live_photo'
+        }, {
+            ['media'] = media,
+            ['photo'] = photo
+        }
+    end
+
     -- Input media meta builder (chainable)
 
     api.input_media_meta = {}

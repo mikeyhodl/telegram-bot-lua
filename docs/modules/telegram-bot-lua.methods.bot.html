@@ -48,6 +48,7 @@
   <li><a href="../modules/telegram-bot-lua.adapters.redis.html">telegram-bot-lua.adapters.redis</a></li>
   <li><a href="../modules/telegram-bot-lua.async.html">telegram-bot-lua.async</a></li>
   <li><a href="../modules/telegram-bot-lua.builders.html">telegram-bot-lua.builders</a></li>
+  <li><a href="../modules/telegram-bot-lua.builders_rich.html">telegram-bot-lua.builders_rich</a></li>
   <li><a href="../modules/telegram-bot-lua.compat.html">telegram-bot-lua.compat</a></li>
   <li><a href="../modules/telegram-bot-lua.handlers.html">telegram-bot-lua.handlers</a></li>
   <li><a href="../modules/telegram-bot-lua.helpers.html">telegram-bot-lua.helpers</a></li>
@@ -63,6 +64,7 @@
   <li><a href="../modules/telegram-bot-lua.methods.messages.html">telegram-bot-lua.methods.messages</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.passport.html">telegram-bot-lua.methods.passport</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.payments.html">telegram-bot-lua.methods.payments</a></li>
+  <li><a href="../modules/telegram-bot-lua.methods.rich.html">telegram-bot-lua.methods.rich</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stickers.html">telegram-bot-lua.methods.stickers</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.stories.html">telegram-bot-lua.methods.stories</a></li>
   <li><a href="../modules/telegram-bot-lua.methods.suggested_posts.html">telegram-bot-lua.methods.suggested_posts</a></li>
@@ -103,6 +105,10 @@
 	<td class="summary">get basic info about a file and prepare it for downloading.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.get_managed_bot_access_settings">api.get_managed_bot_access_settings(user_id)</a></td>
+	<td class="summary">get the access settings of a managed bot (Bot API 10.0).</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.get_managed_bot_token">api.get_managed_bot_token(user_id)</a></td>
 	<td class="summary">get the token of a managed bot.</td>
 	</tr>
@@ -127,6 +133,10 @@
 	<td class="summary">get the current bot short description for the given language.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#api.get_user_personal_chat_messages">api.get_user_personal_chat_messages(user_id, limit)</a></td>
+	<td class="summary">get recent messages from a user's personal chat (Bot API 10.0).</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#api.remove_my_profile_photo">api.remove_my_profile_photo(opts)</a></td>
 	<td class="summary">remove the bot's profile photo.</td>
 	</tr>
@@ -141,6 +151,10 @@
 	<tr>
 	<td class="name" nowrap><a href="#api.set_chat_menu_button">api.set_chat_menu_button(opts)</a></td>
 	<td class="summary">change the bot's menu button in a private chat or the default menu button.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api.set_managed_bot_access_settings">api.set_managed_bot_access_settings(user_id, is_access_restricted, opts)</a></td>
+	<td class="summary">change the access settings of a managed bot (Bot API 10.0).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#api.set_my_commands">api.set_my_commands(commands, opts)</a></td>
@@ -246,6 +260,31 @@
     <ul>
         <li><span class="parameter">file_id</span>
          string file identifier to get info about
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.get_managed_bot_access_settings"></a>
+    <strong>api.get_managed_bot_access_settings(user_id)</strong>
+    </dt>
+    <dd>
+    get the access settings of a managed bot (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number user identifier of the managed bot
         </li>
     </ul>
 
@@ -428,6 +467,34 @@
 
 </dd>
     <dt>
+    <a name = "api.get_user_personal_chat_messages"></a>
+    <strong>api.get_user_personal_chat_messages(user_id, limit)</strong>
+    </dt>
+    <dd>
+    get recent messages from a user's personal chat (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number unique identifier for the target user
+        </li>
+        <li><span class="parameter">limit</span>
+         number maximum number of messages to return; 1-20
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "api.remove_my_profile_photo"></a>
     <strong>api.remove_my_profile_photo(opts)</strong>
     </dt>
@@ -525,6 +592,40 @@
         </li>
         <li><span class="parameter">menu_button</span>
          table|string a JSON-serialized object for the bot's new menu button
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table,number the response object and HTTP status
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api.set_managed_bot_access_settings"></a>
+    <strong>api.set_managed_bot_access_settings(user_id, is_access_restricted, opts)</strong>
+    </dt>
+    <dd>
+    change the access settings of a managed bot (Bot API 10.0).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">user_id</span>
+         number user identifier of the managed bot
+        </li>
+        <li><span class="parameter">is_access_restricted</span>
+         boolean true if only selected users can access the bot
+        </li>
+        <li><span class="parameter">opts</span> table optional parameters
+        <ul>
+        <li><span class="parameter">added_user_ids</span>
+         table list of up to 10 user ids granted access in addition to the owner
         </li>
         </li></ul>
     </ul>
@@ -735,7 +836,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
-<i style="float:right;">Last updated 2026-04-07 21:37:15 </i>
+<i style="float:right;">Last updated 2026-06-22 19:26:43 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
