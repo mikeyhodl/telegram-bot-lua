@@ -42,7 +42,7 @@ return function(api)
     -- @param parameters table optional request parameters
     -- @param file table optional file upload map
     -- @return table decoded JSON response, or false on error
-    function api.async.request(endpoint, parameters, file)
+    function api.async._http_request(endpoint, parameters, file)
         assert(endpoint, 'You must specify an endpoint to make this request to!')
         parameters = parameters or {}
         -- shallow copy so the caller's table is never mutated; stringify
@@ -115,6 +115,14 @@ return function(api)
         return jdat, res
     end
 
+    --- send an async request under the shared retry policy (api.retry).
+    -- uses copas.sleep so honouring 429 / backing off never blocks the loop.
+    function api.async.request(endpoint, parameters, file)
+        return api._with_retry(function()
+            return api.async._http_request(endpoint, parameters, file)
+        end, function(seconds) copas.sleep(seconds) end)
+    end
+
     --- run the bot with concurrent update processing.
     -- each update is dispatched to its own coroutine so a slow handler
     -- won't block processing of other updates.
@@ -140,7 +148,7 @@ return function(api)
 
         copas.addthread(function()
             while api.async._running do
-                local pok, updates = pcall(api.get_updates, {
+                local pok, updates, perr = pcall(api.get_updates, {
                     timeout = timeout,
                     offset = offset,
                     limit = limit,
@@ -167,7 +175,13 @@ return function(api)
                 else
                     -- get_updates returned false or a malformed payload. back
                     -- off so a sustained server-side error doesn't pin a cpu.
-                    if api.debug then
+                    -- a 409 is a configuration error (duplicate poller / webhook
+                    -- still set), not transient, so surface it loudly.
+                    if type(perr) == 'table' and tonumber(perr.error_code) == 409 then
+                        print('Polling conflict (409): another getUpdates is running for this ' ..
+                            'bot, or a webhook is still set. stop the other instance or call ' ..
+                            'api.delete_webhook().')
+                    elseif api.debug then
                         print('Polling returned no result, backing off ' .. backoff .. 's')
                     end
                     copas.sleep(backoff)

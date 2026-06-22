@@ -49,6 +49,7 @@ describe('module structure', function()
             ['telegram-bot-lua.core'] = 'src/core.lua',
             ['telegram-bot-lua.polyfill'] = 'src/polyfill.lua',
             ['telegram-bot-lua.async'] = 'src/async.lua',
+            ['telegram-bot-lua.webhook'] = 'src/webhook.lua',
             ['telegram-bot-lua.b64url'] = 'src/b64url.lua',
             ['telegram-bot-lua.methods.updates'] = 'src/methods/updates.lua',
             ['telegram-bot-lua.methods.messages'] = 'src/methods/messages.lua',

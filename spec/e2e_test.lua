@@ -36,6 +36,7 @@ local module_map = {
     ['telegram-bot-lua.tools'] = 'src/tools.lua',
     ['telegram-bot-lua.utils'] = 'src/utils.lua',
     ['telegram-bot-lua.async'] = 'src/async.lua',
+    ['telegram-bot-lua.webhook'] = 'src/webhook.lua',
     ['telegram-bot-lua.compat'] = 'src/compat.lua',
     ['telegram-bot-lua.core'] = 'src/core.lua',
     ['telegram-bot-lua.polyfill'] = 'src/polyfill.lua',

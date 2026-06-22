@@ -69,7 +69,7 @@ end
 -- @param file table optional file attachments keyed by type
 -- @return table|false the decoded JSON response, or false on failure
 -- @return string|table the HTTP status or error details
-function api.request(endpoint, parameters, file)
+function api._http_request(endpoint, parameters, file)
     assert(endpoint, 'You must specify an endpoint to make this request to!')
     parameters = parameters or {}
     -- work on a shallow copy so we never mutate the caller's table; stringify
@@ -142,6 +142,85 @@ function api.request(endpoint, parameters, file)
     return jdat, res
 end
 
+--- retry policy for api.request. honours telegram's 429 retry_after (required
+-- by the api) and retries transient connection failures with bounded
+-- exponential backoff; a normal 4xx api error is returned immediately.
+api.retry = {
+    ['enabled'] = true,
+    ['max_attempts'] = 3,
+    ['base_delay'] = 1,
+    ['max_delay'] = 30
+}
+
+-- default blocking sleeper; the async layer passes copas.sleep instead.
+local function blocking_sleep(seconds)
+    local ok, socket = pcall(require, 'socket')
+    if ok and socket and socket.sleep then
+        socket.sleep(seconds)
+    else
+        os.execute('sleep ' .. tostring(math.max(1, math.floor(seconds))))
+    end
+end
+
+-- classify a request error: 'rate_limit' (+ retry_after), 'transient', or 'fatal'.
+-- an api error with a numeric error_code other than 429 is fatal (not retried);
+-- 429 is rate-limited; string connection / json-decode errors are transient.
+local function classify_error(err)
+    if type(err) == 'table' and tonumber(err.error_code) then
+        if tonumber(err.error_code) == 429 then
+            local retry_after = err.parameters and tonumber(err.parameters.retry_after)
+            return 'rate_limit', retry_after
+        end
+        return 'fatal'
+    end
+    return 'transient'
+end
+
+--- run a request thunk under the retry policy in api.retry.
+-- @param thunk function a no-arg function returning (result, err) like api.request
+-- @param sleeper function optional sleep(seconds); defaults to a blocking sleep
+-- @return table|false result and error, identical to the thunk's contract
+function api._with_retry(thunk, sleeper)
+    sleeper = sleeper or blocking_sleep
+    if not (api.retry and api.retry.enabled) then
+        return thunk()
+    end
+    local max_attempts = tonumber(api.retry.max_attempts) or 3
+    local backoff = tonumber(api.retry.base_delay) or 1
+    local max_delay = tonumber(api.retry.max_delay) or 30
+    local attempt = 0
+    while true do
+        attempt = attempt + 1
+        local result, err = thunk()
+        if result then
+            return result, err
+        end
+        local kind, retry_after = classify_error(err)
+        if kind == 'fatal' or attempt >= max_attempts then
+            return result, err
+        end
+        if kind == 'rate_limit' then
+            sleeper(retry_after or backoff)
+        else
+            sleeper(backoff)
+            backoff = math.min(backoff * 2, max_delay)
+        end
+    end
+end
+
+--- send a request to the telegram bot API with the retry policy applied.
+-- wraps api._http_request; see api.retry to configure or disable retries.
+-- @param endpoint string the full API endpoint URL
+-- @param parameters table optional request parameters
+-- @param file table optional file attachments keyed by type
+-- @return table|false the decoded JSON response, or false on failure
+-- @return string|table the HTTP status or error details
+function api.request(endpoint, parameters, file)
+    return api._with_retry(function()
+        return api._http_request(endpoint, parameters, file)
+    end)
+end
+
 --- get basic information about the bot via getMe.
 -- @return table|false the bot user object, or false on failure
 -- @return string|table the HTTP status or error details
@@ -191,6 +270,7 @@ require('telegram-bot-lua.methods.rich')(api)
 require('telegram-bot-lua.utils')(api)
 require('telegram-bot-lua.mcp')(api)
 require('telegram-bot-lua.async')(api)
+require('telegram-bot-lua.webhook')(api)
 require('telegram-bot-lua.adapters')(api)
 require('telegram-bot-lua.compat')(api)
 

@@ -15,6 +15,7 @@ local module_map = {
     ['telegram-bot-lua.tools'] = 'src/tools.lua',
     ['telegram-bot-lua.utils'] = 'src/utils.lua',
     ['telegram-bot-lua.async'] = 'src/async.lua',
+    ['telegram-bot-lua.webhook'] = 'src/webhook.lua',
     ['telegram-bot-lua.compat'] = 'src/compat.lua',
     ['telegram-bot-lua.core'] = 'src/core.lua',
     ['telegram-bot-lua.polyfill'] = 'src/polyfill.lua',
@@ -65,7 +66,7 @@ api.info.name = api.info.first_name
 -- api._real_request, defeating any test that calls the real implementation.
 api._requests = api._requests or {}
 if not api._real_request then
-    api._real_request = api.request
+    api._real_request = api._http_request
 end
 api.request = function(endpoint, parameters, file)
     table.insert(api._requests, {
