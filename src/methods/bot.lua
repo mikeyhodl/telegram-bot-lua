@@ -310,4 +310,68 @@ return function(api)
         })
         return success, res
     end
+
+    --- verify a user on behalf of the organisation which is represented by the bot.
+    -- @param user_id number unique identifier of the target user
+    -- @param opts table optional parameters
+    -- @param opts.custom_description string custom description for the verification; 0-70 characters
+    -- @return table,number the response object and HTTP status
+    function api.verify_user(user_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/verifyUser', {
+            ['user_id'] = user_id,
+            ['custom_description'] = opts.custom_description
+        })
+        return success, res
+    end
+
+    --- verify a chat on behalf of the organisation which is represented by the bot.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target channel
+    -- @param opts table optional parameters
+    -- @param opts.custom_description string custom description for the verification; 0-70 characters
+    -- @return table,number the response object and HTTP status
+    function api.verify_chat(chat_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/verifyChat', {
+            ['chat_id'] = chat_id,
+            ['custom_description'] = opts.custom_description
+        })
+        return success, res
+    end
+
+    --- remove verification from a user who is currently verified on behalf of the organisation.
+    -- @param user_id number unique identifier of the target user
+    -- @return table,number the response object and HTTP status
+    function api.remove_user_verification(user_id)
+        local success, res = api.request(config.endpoint .. api.token .. '/removeUserVerification', {
+            ['user_id'] = user_id
+        })
+        return success, res
+    end
+
+    --- remove verification from a chat that is currently verified on behalf of the organisation.
+    -- @param chat_id number|string unique identifier for the target chat or username of the target channel
+    -- @return table,number the response object and HTTP status
+    function api.remove_chat_verification(chat_id)
+        local success, res = api.request(config.endpoint .. api.token .. '/removeChatVerification', {
+            ['chat_id'] = chat_id
+        })
+        return success, res
+    end
+
+    --- change the emoji status for a given user that previously allowed the bot to manage their emoji status.
+    -- @param user_id number unique identifier of the target user
+    -- @param opts table optional parameters
+    -- @param opts.emoji_status_custom_emoji_id string custom emoji identifier of the emoji status to set
+    -- @param opts.emoji_status_expiration_date number expiration date of the emoji status, if any
+    -- @return table,number the response object and HTTP status
+    function api.set_user_emoji_status(user_id, opts)
+        opts = opts or {}
+        local success, res = api.request(config.endpoint .. api.token .. '/setUserEmojiStatus', {
+            ['user_id'] = user_id,
+            ['emoji_status_custom_emoji_id'] = opts.emoji_status_custom_emoji_id,
+            ['emoji_status_expiration_date'] = opts.emoji_status_expiration_date
+        })
+        return success, res
+    end
 end

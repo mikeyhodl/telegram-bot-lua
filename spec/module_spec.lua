@@ -67,6 +67,7 @@ describe('module structure', function()
             ['telegram-bot-lua.methods.gifts'] = 'src/methods/gifts.lua',
             ['telegram-bot-lua.methods.checklists'] = 'src/methods/checklists.lua',
             ['telegram-bot-lua.methods.stories'] = 'src/methods/stories.lua',
+            ['telegram-bot-lua.methods.business'] = 'src/methods/business.lua',
             ['telegram-bot-lua.methods.suggested_posts'] = 'src/methods/suggested_posts.lua',
             ['telegram-bot-lua.methods.rich'] = 'src/methods/rich.lua',
             ['telegram-bot-lua.adapters'] = 'src/adapters/init.lua',

@@ -62,4 +62,28 @@ return function(api)
         })
         return success, res
     end
+
+    --- edit a checklist on behalf of a connected business account.
+    -- @param business_connection_id string unique identifier of the business connection
+    -- @param chat_id string|number unique identifier for the target chat
+    -- @param message_id number unique identifier for the target message
+    -- @param checklist string|table a JSON-serialised InputChecklist object or a table thereof
+    -- @param opts table optional parameters
+    -- @param opts.reply_markup string|table a JSON-serialised object for the new inline keyboard
+    -- @return table|false the edited message, or false on failure
+    -- @return string|table the HTTP status or error details
+    function api.edit_message_checklist(business_connection_id, chat_id, message_id, checklist, opts)
+        opts = opts or {}
+        checklist = type(checklist) == 'table' and json.encode(checklist) or checklist
+        local reply_markup = opts.reply_markup
+        reply_markup = type(reply_markup) == 'table' and json.encode(reply_markup) or reply_markup
+        local success, res = api.request(config.endpoint .. api.token .. '/editMessageChecklist', {
+            ['business_connection_id'] = business_connection_id,
+            ['chat_id'] = chat_id,
+            ['message_id'] = message_id,
+            ['checklist'] = checklist,
+            ['reply_markup'] = reply_markup
+        })
+        return success, res
+    end
 end

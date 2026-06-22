@@ -186,4 +186,12 @@ return function(api)
         })
         return success, res
     end
+
+    --- get the current telegram stars balance of the bot.
+    -- @return table|false the star amount object, or false on failure
+    -- @return string|table the HTTP status or error details
+    function api.get_my_star_balance()
+        local success, res = api.request(config.endpoint .. api.token .. '/getMyStarBalance')
+        return success, res
+    end
 end
