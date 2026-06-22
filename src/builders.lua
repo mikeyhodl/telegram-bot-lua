@@ -236,6 +236,126 @@ return function(api)
         return button
     end
 
+    --- create a keyboard button that requests users when pressed.
+    -- @param text string label text for the button
+    -- @param request_id number signed 32-bit identifier of the request, unique within the message
+    -- @param opts table optional user_is_bot, user_is_premium, max_quantity, request_name, request_username, request_photo
+    -- @return table a keyboard button object with a request_users field
+    function api.keyboard_button_request_users(text, request_id, opts)
+        opts = opts or {}
+        return {
+            ['text'] = text,
+            ['request_users'] = {
+                ['request_id'] = tonumber(request_id),
+                ['user_is_bot'] = opts.user_is_bot,
+                ['user_is_premium'] = opts.user_is_premium,
+                ['max_quantity'] = tonumber(opts.max_quantity),
+                ['request_name'] = opts.request_name,
+                ['request_username'] = opts.request_username,
+                ['request_photo'] = opts.request_photo
+            }
+        }
+    end
+
+    --- create a keyboard button that requests a chat when pressed.
+    -- @param text string label text for the button
+    -- @param request_id number signed 32-bit identifier of the request, unique within the message
+    -- @param chat_is_channel boolean pass true to request a channel chat, false to request a group or supergroup
+    -- @param opts table optional chat_is_forum, chat_has_username, chat_is_created, user_administrator_rights, bot_administrator_rights, bot_is_member, request_title, request_username, request_photo
+    -- @return table a keyboard button object with a request_chat field
+    function api.keyboard_button_request_chat(text, request_id, chat_is_channel, opts)
+        opts = opts or {}
+        return {
+            ['text'] = text,
+            ['request_chat'] = {
+                ['request_id'] = tonumber(request_id),
+                ['chat_is_channel'] = chat_is_channel,
+                ['chat_is_forum'] = opts.chat_is_forum,
+                ['chat_has_username'] = opts.chat_has_username,
+                ['chat_is_created'] = opts.chat_is_created,
+                ['user_administrator_rights'] = opts.user_administrator_rights,
+                ['bot_administrator_rights'] = opts.bot_administrator_rights,
+                ['bot_is_member'] = opts.bot_is_member,
+                ['request_title'] = opts.request_title,
+                ['request_username'] = opts.request_username,
+                ['request_photo'] = opts.request_photo
+            }
+        }
+    end
+
+    --- create a keyboard button that requests the user's contact when pressed.
+    -- @param text string label text for the button
+    -- @return table a keyboard button object with request_contact set to true
+    function api.keyboard_button_request_contact(text)
+        return {
+            ['text'] = text,
+            ['request_contact'] = true
+        }
+    end
+
+    --- create a keyboard button that requests the user's location when pressed.
+    -- @param text string label text for the button
+    -- @return table a keyboard button object with request_location set to true
+    function api.keyboard_button_request_location(text)
+        return {
+            ['text'] = text,
+            ['request_location'] = true
+        }
+    end
+
+    --- create a keyboard button that asks the user to create a poll when pressed.
+    -- @param text string label text for the button
+    -- @param poll_type string optional "quiz", "regular", or nil for any type
+    -- @return table a keyboard button object with a request_poll field
+    function api.keyboard_button_request_poll(text, poll_type)
+        return {
+            ['text'] = text,
+            ['request_poll'] = {
+                ['type'] = poll_type
+            }
+        }
+    end
+
+    --- create a keyboard button that launches a web app when pressed.
+    -- @param text string label text for the button
+    -- @param url string an https url of a web app to be opened
+    -- @return table a keyboard button object with a web_app field
+    function api.keyboard_button_web_app(text, url)
+        return {
+            ['text'] = text,
+            ['web_app'] = {
+                ['url'] = url
+            }
+        }
+    end
+
+    --- create a login url object for an inline keyboard button.
+    -- @param url string an https url to be opened with user authorization data
+    -- @param opts table optional forward_text, bot_username, request_write_access
+    -- @return table a login url object
+    function api.login_url(url, opts)
+        opts = opts or {}
+        return {
+            ['url'] = url,
+            ['forward_text'] = opts.forward_text,
+            ['bot_username'] = opts.bot_username,
+            ['request_write_access'] = opts.request_write_access
+        }
+    end
+
+    --- create a copy text button for an inline keyboard.
+    -- @param text string label text for the button
+    -- @param copy_text string the text to be copied to the clipboard; 1-256 characters
+    -- @return table an inline keyboard button object with a copy_text field
+    function api.copy_text_button(text, copy_text)
+        return {
+            ['text'] = text,
+            ['copy_text'] = {
+                ['text'] = copy_text
+            }
+        }
+    end
+
     --- create a remove keyboard markup to request removal of the custom keyboard.
     -- @param selective boolean optional remove keyboard for specific users only
     -- @return table a ReplyKeyboardRemove object
@@ -512,6 +632,129 @@ return function(api)
         }, {
             ['media'] = media,
             ['photo'] = photo
+        }
+    end
+
+    --- create an input paid media photo object.
+    -- @param media string file_id, url, or attach reference for the photo
+    -- @return table the input paid media object
+    function api.input_paid_media_photo(media)
+        return {
+            ['type'] = 'photo',
+            ['media'] = media
+        }
+    end
+
+    --- create an input paid media video object.
+    -- @param media string file_id, url, or attach reference for the video
+    -- @param opts table optional thumbnail, cover, start_timestamp, width, height, duration, supports_streaming
+    -- @return table the input paid media object
+    function api.input_paid_media_video(media, opts)
+        opts = opts or {}
+        return {
+            ['type'] = 'video',
+            ['media'] = media,
+            ['thumbnail'] = opts.thumbnail,
+            ['cover'] = opts.cover,
+            ['start_timestamp'] = tonumber(opts.start_timestamp),
+            ['width'] = tonumber(opts.width),
+            ['height'] = tonumber(opts.height),
+            ['duration'] = tonumber(opts.duration),
+            ['supports_streaming'] = opts.supports_streaming
+        }
+    end
+
+    --- create an input poll option object.
+    -- @param text string option text, 1-100 characters
+    -- @param opts table optional text_parse_mode, text_entities, media
+    -- @return table the input poll option object
+    function api.input_poll_option(text, opts)
+        opts = opts or {}
+        return {
+            ['text'] = text,
+            ['text_parse_mode'] = opts.text_parse_mode,
+            ['text_entities'] = opts.text_entities,
+            ['media'] = opts.media
+        }
+    end
+
+    --- create an input checklist task object.
+    -- @param id number unique positive identifier of the task
+    -- @param text string text of the task, 1-100 characters
+    -- @param opts table optional parse_mode, text_entities
+    -- @return table the input checklist task object
+    function api.input_checklist_task(id, text, opts)
+        opts = opts or {}
+        return {
+            ['id'] = tonumber(id),
+            ['text'] = text,
+            ['parse_mode'] = opts.parse_mode,
+            ['text_entities'] = opts.text_entities
+        }
+    end
+
+    --- create an input checklist object.
+    -- @param title string title of the checklist, 1-255 characters
+    -- @param tasks table array of input checklist task objects, 1-30 tasks
+    -- @param opts table optional parse_mode, title_entities, others_can_add_tasks, others_can_mark_tasks_as_done
+    -- @return table the input checklist object
+    function api.input_checklist(title, tasks, opts)
+        opts = opts or {}
+        return {
+            ['title'] = title,
+            ['parse_mode'] = opts.parse_mode,
+            ['title_entities'] = opts.title_entities,
+            ['tasks'] = tasks,
+            ['others_can_add_tasks'] = opts.others_can_add_tasks,
+            ['others_can_mark_tasks_as_done'] = opts.others_can_mark_tasks_as_done
+        }
+    end
+
+    --- create an input story content photo object.
+    -- @param photo string the photo to post as a story; file_id, url, or attach reference
+    -- @return table the input story content object
+    function api.input_story_content_photo(photo)
+        return {
+            ['type'] = 'photo',
+            ['photo'] = photo
+        }
+    end
+
+    --- create an input story content video object.
+    -- @param video string the video to post as a story; file_id, url, or attach reference
+    -- @param opts table optional duration, cover_frame_timestamp, is_animation
+    -- @return table the input story content object
+    function api.input_story_content_video(video, opts)
+        opts = opts or {}
+        return {
+            ['type'] = 'video',
+            ['video'] = video,
+            ['duration'] = tonumber(opts.duration),
+            ['cover_frame_timestamp'] = tonumber(opts.cover_frame_timestamp),
+            ['is_animation'] = opts.is_animation
+        }
+    end
+
+    --- create an input profile photo static object.
+    -- @param photo string the static profile photo; file_id, url, or attach reference
+    -- @return table the input profile photo object
+    function api.input_profile_photo_static(photo)
+        return {
+            ['type'] = 'static',
+            ['photo'] = photo
+        }
+    end
+
+    --- create an input profile photo animated object.
+    -- @param animation string the animated profile photo; file_id, url, or attach reference
+    -- @param opts table optional main_frame_timestamp
+    -- @return table the input profile photo object
+    function api.input_profile_photo_animated(animation, opts)
+        opts = opts or {}
+        return {
+            ['type'] = 'animated',
+            ['animation'] = animation,
+            ['main_frame_timestamp'] = tonumber(opts.main_frame_timestamp)
         }
     end
 
@@ -985,6 +1228,12 @@ return function(api)
         return { ['type'] = 'custom_emoji', ['custom_emoji_id'] = custom_emoji_id }
     end
 
+    --- create a paid reaction type object.
+    -- @return table a reaction type object with type "paid"
+    function api.reaction_type_paid()
+        return { ['type'] = 'paid' }
+    end
+
     -- Web app info
 
     function api.web_app_info(url)
@@ -996,9 +1245,11 @@ return function(api)
     function api.accepted_gift_types(opts)
         opts = opts or {}
         return {
-            ['regular_gifts'] = opts.regular_gifts,
-            ['upgraded_gifts'] = opts.upgraded_gifts,
-            ['premium_subscription'] = opts.premium_subscription
+            ['unlimited_gifts'] = opts.unlimited_gifts,
+            ['limited_gifts'] = opts.limited_gifts,
+            ['unique_gifts'] = opts.unique_gifts,
+            ['premium_subscription'] = opts.premium_subscription,
+            ['gifts_from_channels'] = opts.gifts_from_channels
         }
     end
 
