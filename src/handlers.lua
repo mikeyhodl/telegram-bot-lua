@@ -110,6 +110,11 @@ return function(api)
     -- @return any the return value of the matched handler
     function api._dispatch_update(update)
         api.on_update(update)
+        -- framework layer (commands, hears, conversations) runs first; if it
+        -- fully handles the update the legacy on_* handlers are skipped.
+        if api._framework_handle and api._framework_handle(update) then
+            return true
+        end
         if update.message then
             if update.message.chat.type == 'private' then
                 api.on_private_message(update.message)
