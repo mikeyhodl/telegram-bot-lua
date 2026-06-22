@@ -104,11 +104,92 @@ api.input_media_animation(media, thumbnail, caption, parse_mode, width, height, 
 api.input_media_audio(media, thumbnail, caption, parse_mode, duration, performer, title)
 api.input_media_document(media, thumbnail, caption, parse_mode)
 
+-- Bot API 10.x media types
+api.input_media_sticker(media, emoji)
+api.input_media_location(latitude, longitude, horizontal_accuracy)
+api.input_media_venue(latitude, longitude, title, address, opts)
+api.input_media_live_photo(media, photo, opts)
+api.input_media_link(url)
+api.input_paid_media_live_photo(media, photo)
+
 -- Chainable builder
 local media = api.input_media()
     :photo('photo_file_id', 'First photo')
     :photo('photo_file_id_2', 'Second photo')
     :video('video_file_id', 'A video', 1280, 720, 120)
+```
+
+## Rich Message Builders (Bot API 10.1)
+
+### Sending
+
+Build an `InputRichMessage` (what you send) from HTML or Markdown — supply exactly one:
+
+```lua
+api.input_rich_message({ html = '<b>Hi</b>', is_rtl = false, skip_entity_detection = false })
+api.input_rich_message({ markdown = '*Hi*' })
+
+api.input_rich_message_content(rich_message)  -- wrap for inline/guest/web app results
+api.link(url)                                 -- a Link object
+```
+
+Pass the result to `api.send_rich_message`, `api.send_rich_message_draft`, or `edit_message_text`'s `rich_message` opt (see [Methods](methods.md#rich-messages)).
+
+### Received structure (RichText / RichBlock)
+
+These model the parsed `message.rich_message` (a `RichMessage` of `RichBlock`s, whose text is `RichText`). A rich text's `text` argument may be a plain string, an array, or another rich text.
+
+```lua
+api.rich_message(blocks, is_rtl)
+
+-- rich text
+api.rich_text_bold(text)         api.rich_text_italic(text)
+api.rich_text_underline(text)    api.rich_text_strikethrough(text)
+api.rich_text_spoiler(text)      api.rich_text_subscript(text)
+api.rich_text_superscript(text)  api.rich_text_marked(text)
+api.rich_text_code(text)
+api.rich_text_date_time(text, unix_time, date_time_format)
+api.rich_text_text_mention(text, user)
+api.rich_text_custom_emoji(custom_emoji_id, alternative_text)   -- no text field
+api.rich_text_mathematical_expression(expression)               -- no text field
+api.rich_text_url(text, url)
+api.rich_text_email_address(text, email_address)
+api.rich_text_phone_number(text, phone_number)
+api.rich_text_bank_card_number(text, bank_card_number)
+api.rich_text_mention(text, username)
+api.rich_text_hashtag(text, hashtag)
+api.rich_text_cashtag(text, cashtag)
+api.rich_text_bot_command(text, bot_command)
+api.rich_text_anchor(name)                                      -- no text field
+api.rich_text_anchor_link(text, anchor_name)
+api.rich_text_reference(text, name)
+api.rich_text_reference_link(text, reference_name)
+
+-- rich blocks
+api.rich_block_paragraph(text)
+api.rich_block_heading(text, size)                  -- size 1-6
+api.rich_block_preformatted(text, language)
+api.rich_block_footer(text)
+api.rich_block_divider()
+api.rich_block_mathematical_expression(expression)
+api.rich_block_anchor(name)
+api.rich_block_list(items)
+api.rich_block_list_item(label, blocks, opts)       -- opts: has_checkbox, is_checked, value, type
+api.rich_block_blockquote(blocks, credit)
+api.rich_block_pullquote(text, credit)
+api.rich_block_collage(blocks, caption)
+api.rich_block_slideshow(blocks, caption)
+api.rich_block_table(cells, opts)                   -- opts: is_bordered, is_striped, caption
+api.rich_block_table_cell(text, opts)               -- opts: is_header, colspan, rowspan, align, valign
+api.rich_block_details(summary, blocks, is_open)
+api.rich_block_map(location, opts)                  -- opts: zoom, width, height, caption
+api.rich_block_animation(animation, opts)           -- opts: has_spoiler, caption
+api.rich_block_audio(audio, caption)
+api.rich_block_photo(photo, opts)                   -- opts: has_spoiler, caption
+api.rich_block_video(video, opts)                   -- opts: has_spoiler, caption
+api.rich_block_voice_note(voice_note, caption)
+api.rich_block_caption(text, credit)
+api.rich_block_thinking(text)                       -- drafts only
 ```
 
 ## Prices

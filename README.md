@@ -105,6 +105,7 @@ src/
   tools.lua             -- Utility functions (formatting, file ops, etc.)
   handlers.lua          -- Update routing and on_* handler stubs (async-first)
   builders.lua          -- Keyboard, inline result, and type constructors
+  builders_rich.lua     -- Rich message builders (RichText/RichBlock DSL)
   helpers.lua           -- Member status check helpers
   utils.lua             -- Bot development utilities (fmt, commands, pagination)
   compat.lua            -- v2 backward compatibility layer
@@ -130,6 +131,7 @@ src/
     checklists.lua      -- Checklist methods
     stories.lua         -- Story methods
     suggested_posts.lua -- Suggested post methods
+    rich.lua            -- Rich message methods (send_rich_message, drafts)
 ```
 
 ## Testing

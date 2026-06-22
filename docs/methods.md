@@ -20,6 +20,7 @@ api.send_video(chat_id, video, opts)
 api.send_animation(chat_id, animation, opts)
 api.send_voice(chat_id, voice, opts)
 api.send_video_note(chat_id, video_note, opts)
+api.send_live_photo(chat_id, live_photo, photo, opts)
 api.send_media_group(chat_id, media, opts)
 api.send_location(chat_id, latitude, longitude, opts)
 api.send_venue(chat_id, latitude, longitude, title, address, opts)
@@ -28,6 +29,8 @@ api.send_poll(chat_id, question, options, opts)
 api.send_dice(chat_id, opts)
 api.send_chat_action(chat_id, action, opts)
 api.set_message_reaction(chat_id, message_id, opts)
+api.delete_message_reaction(chat_id, message_id, opts)
+api.delete_all_message_reactions(chat_id, opts)
 api.send_paid_media(chat_id, star_count, media, opts)
 ```
 
@@ -64,6 +67,10 @@ Shorthand for sending a reply to an existing message:
 api.send_reply(message, 'Reply text', { parse_mode = 'HTML' })
 ```
 
+### Poll additions (Bot API 10.x)
+
+`send_poll` accepts media and channel-poll opts: `media` and `explanation_media` (build with the `api.input_media_*` builders), `members_only`, and `country_codes`. The minimum number of options is now 1.
+
 ## Edit Methods
 
 ```lua
@@ -78,6 +85,33 @@ api.delete_message(chat_id, message_id)
 api.delete_messages(chat_id, message_ids)
 ```
 
+`edit_message_text` also accepts a `rich_message` opt (Bot API 10.1) — see [Rich Messages](#rich-messages).
+
+## Rich Messages
+
+Rich messages (Bot API 10.1) carry structured, streamable formatted content described with HTML or Markdown.
+
+```lua
+api.send_rich_message(chat_id, rich_message, opts)
+api.send_rich_message_draft(chat_id, draft_id, rich_message, opts)
+```
+
+Build the `rich_message` (an InputRichMessage) with `api.input_rich_message`:
+
+```lua
+api.send_rich_message(chat_id, api.input_rich_message({ html = '<b>Hello</b>' }))
+
+-- stream a draft (e.g. an AI reply) by repeating with the same draft_id
+api.send_rich_message_draft(chat_id, 1, api.input_rich_message({ markdown = '*thinking...*' }))
+
+-- edit a message's rich content
+api.edit_message_text(chat_id, message_id, nil, {
+    rich_message = api.input_rich_message({ html = '<i>updated</i>' })
+})
+```
+
+See [Builders](builders.md#rich-message-builders-bot-api-101) for the rich text/block constructors.
+
 ## Updates
 
 ```lua
@@ -91,7 +125,7 @@ api.get_webhook_info()
 
 ```lua
 api.get_chat(chat_id)
-api.get_chat_administrators(chat_id)
+api.get_chat_administrators(chat_id, opts)   -- opts.return_bots to include bot admins
 api.get_chat_member_count(chat_id)
 api.get_chat_member(chat_id, user_id)
 api.leave_chat(chat_id)
@@ -111,6 +145,8 @@ api.edit_chat_invite_link(chat_id, invite_link, opts)
 api.revoke_chat_invite_link(chat_id, invite_link)
 api.approve_chat_join_request(chat_id, user_id)
 api.decline_chat_join_request(chat_id, user_id)
+api.answer_chat_join_request_query(chat_join_request_query_id, result)   -- result: 'approve' | 'decline' | 'queue'
+api.send_chat_join_request_web_app(chat_join_request_query_id, web_app_url)
 api.get_user_chat_boosts(chat_id, user_id)
 ```
 
@@ -171,6 +207,7 @@ api.delete_sticker_set(name)
 ```lua
 api.answer_inline_query(inline_query_id, results, opts)
 api.answer_web_app_query(web_app_query_id, result)
+api.answer_guest_query(guest_query_id, result)
 api.answer_callback_query(callback_query_id, opts)
 api.send_inline_article(inline_query_id, title, description, message_text, parse_mode, reply_markup)
 api.send_inline_article_url(inline_query_id, title, url, hide_url, input_message_content, reply_markup, id)
@@ -220,6 +257,9 @@ api.set_my_default_administrator_rights(opts)
 api.get_my_default_administrator_rights(opts)
 api.set_my_profile_photo(opts)
 api.remove_my_profile_photo(opts)
+api.get_managed_bot_access_settings(user_id)
+api.set_managed_bot_access_settings(user_id, is_access_restricted, opts)
+api.get_user_personal_chat_messages(user_id, limit)
 ```
 
 ## Passport
