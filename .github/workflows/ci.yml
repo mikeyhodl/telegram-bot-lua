@@ -81,3 +81,28 @@ jobs:
 
       - name: Run luacheck
         run: luacheck src/ --no-unused-args --no-max-line-length --globals _G _TEST
+
+  docs:
+    name: Docs in sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.3"
+
+      - name: Install LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install LDoc and markdown
+        run: |
+          luarocks install penlight 1.15.0
+          luarocks install ldoc 1.5.0
+          luarocks install markdown 0.33
+
+      - name: Check docs are in sync with src
+        run: make docs-check
